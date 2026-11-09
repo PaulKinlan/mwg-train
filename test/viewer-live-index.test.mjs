@@ -63,6 +63,26 @@ test('an empty corpus says so and still links to the working viewer index', () =
   assert.doesNotMatch(html, /action="\/live\//);
 });
 
+test('the live listener admits the viewer origin the Start form posts from, and only on this host', async (t) => {
+  // The serve-live form is rendered on viewer pages and posts to the live origin, so this listener takes a
+  // state-changing request from the viewer's port as well as its own. The path below is one the live listener does
+  // not serve: 404 - not the origin refusal - is what proves the gate let the request through to the router, and a
+  // 404 is also proof that nothing acted (mwg-train-4oyp keeps this half of the rule while closing the reverse).
+  const { viewer, live } = await serve(t);
+  const admitted = await fetch(`${live}/not-a-live-path`, { method: 'POST', headers: { Origin: viewer } });
+  assert.equal(admitted.status, 404, 'a POST from the viewer origin reaches the live router');
+  assert.doesNotMatch(await admitted.text(), /refused:/);
+
+  // An origin on the same host but a port that is neither listener's is still refused (9 is not an ephemeral port the
+  // fixture could have been given, and it is not the paired live port either).
+  const refused = await fetch(`${live}/not-a-live-path`, {
+    method: 'POST',
+    headers: { Origin: 'http://127.0.0.1:9' },
+  });
+  assert.equal(refused.status, 403);
+  assert.match(await refused.text(), /not a port this viewer serves/);
+});
+
 test('live navigation refuses an attacker-controlled Host as a link authority', () => {
   assert.equal(viewerOriginFor({ headers: { host: 'evil.test:7701' } }, 7700), 'http://127.0.0.1:7700');
   assert.equal(viewerOriginFor({ headers: { host: 'mwg-train.exe.xyz:7701' } }, 7700), 'https://mwg-train.exe.xyz:7700');

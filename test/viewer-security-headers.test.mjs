@@ -17,9 +17,11 @@ import { assetHeaders, createViewer, originVerdict, viewerHeaders } from '../src
 
 const ROOT = resolve(import.meta.dirname, '..');
 
-async function serve(t) {
+async function serve(t, { livePort } = {}) {
   const stateDir = mkdtempSync(join(tmpdir(), 'viewer-headers-state-'));
-  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT });
+  const { server, liveServer, pool } = createViewer({ allowAnonymous: true, corpusRoot: join(ROOT, 'pilot'), stateDir, repoRoot: ROOT,
+    // Only passed when a test cares which port the paired live origin is on; otherwise the CLI's default applies.
+    ...(livePort ? { livePort } : {}) });
   t.after(() => {
     pool.stopAll();
     server.close();
@@ -307,36 +309,45 @@ test('read-only requests are unaffected, so the viewer keeps serving pages', asy
 
 test('the origin verdict itself: this host, one of our ports, and a declaration is required', () => {
   const request = (headers) => ({ headers });
-  const ports = { viewerPort: 7700, livePort: 7701 };
+  // Each listener names only the origins it takes a state-changing request from (mwg-train-4oyp): the viewer listener
+  // names its own port, and the live listener names its own plus the viewer's, because the serve-live Start form is
+  // rendered on viewer pages.
+  const viewerListener = { viewerPort: 7700 };
+  const liveListener = { viewerPort: 7700, livePort: 7701 };
   // Same trusted host and one of our ports: allowed. This covers the ordinary case and the serve-live form, which
   // posts from the viewer port to the live port on the same host.
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:7700' }), ports).allowed, true);
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7701', origin: 'http://127.0.0.1:7700' }), ports).allowed, true);
-  assert.equal(originVerdict(request({ host: 'localhost:7700', referer: 'http://localhost:7700/tuning' }), ports).allowed, true);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:7700' }), viewerListener).allowed, true);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7701', origin: 'http://127.0.0.1:7700' }), liveListener).allowed, true);
+  assert.equal(originVerdict(request({ host: 'localhost:7700', referer: 'http://localhost:7700/tuning' }), viewerListener).allowed, true);
+  // The live origin is a DIFFERENT origin, and the viewer listener must not admit it (mwg-train-4oyp): the live origin
+  // runs untrusted model-written site code, and cookies are scoped by host rather than port, so a page there carries
+  // the viewer's cookies. Naming the live port on the viewer listener let that code forge posts to paid viewer routes.
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:7701' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', referer: 'http://127.0.0.1:7701/project/x' }), viewerListener).allowed, false);
   // A fronting proxy terminates TLS at 443, so the browser sends an origin with no port while the Host header may
   // carry the backend's port. 443 is admitted for an https host for that reason, and only for https.
-  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://mwg-train.exe.xyz' }), ports).allowed, true);
-  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz', origin: 'https://mwg-train.exe.xyz' }), ports).allowed, true);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://mwg-train.exe.xyz' }), viewerListener).allowed, true);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz', origin: 'https://mwg-train.exe.xyz' }), viewerListener).allowed, true);
   // Another host we would not trust, a port that is not ours, no declaration, an unparseable one, a scheme that is
   // not ours, and a trusted *suffix* that is not this host: all refused. The port case is the one a page served
   // from another local port would otherwise pass - the browser test for this change caught exactly that.
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'https://evil.example' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: 'evil.example', origin: 'http://evil.example' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:9999' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7700' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'not a url' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'http://mwg-train.exe.xyz' }), ports).allowed, false);
-  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://other.exe.xyz' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'https://evil.example' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: 'evil.example', origin: 'http://evil.example' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'http://127.0.0.1:9999' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:7700', origin: 'not a url' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'http://mwg-train.exe.xyz' }), viewerListener).allowed, false);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:7700', origin: 'https://other.exe.xyz' }), viewerListener).allowed, false);
   // The request's own port is always acceptable: a POST back to the port it arrived on is this viewer by definition.
   assert.equal(originVerdict(request({ host: '127.0.0.1:8123', origin: 'http://127.0.0.1:8123' })).allowed, true);
   // The scheme default is admitted only when the request named no port either. A viewer on an ephemeral port must
   // not accept a page served from local port 80 - that page is a DIFFERENT origin, not the default of ours
   // (mwg-train-h3qn).
-  assert.equal(originVerdict(request({ host: '127.0.0.1:46321', origin: 'http://127.0.0.1' }), ports).allowed, false);
+  assert.equal(originVerdict(request({ host: '127.0.0.1:46321', origin: 'http://127.0.0.1' }), viewerListener).allowed, false);
   // The https equivalent is deliberately allowed, because 443 is admitted for an https host as the proxy's own port:
   // being a trusted https origin for this host needs a certificate the browser accepts, which a local page cannot
   // arrange, while reaching port 80 needs nothing but a local listener. The http case above is the one that matters.
-  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:46321', origin: 'https://mwg-train.exe.xyz' }), ports).allowed, true);
+  assert.equal(originVerdict(request({ host: 'mwg-train.exe.xyz:46321', origin: 'https://mwg-train.exe.xyz' }), viewerListener).allowed, true);
   // And a request that arrived on the default port is the default port's origin, so a browser that omits the port
   // is accepted - the proxy case, where TLS terminates at 443 and the Host carries no port.
   assert.equal(originVerdict(request({ host: '127.0.0.1', origin: 'http://127.0.0.1' })).allowed, true);
@@ -356,4 +367,37 @@ test('a page on local port 80 cannot POST to a viewer listening on an ephemeral 
   });
   assert.equal(response.status, 403, 'an origin on the scheme default port is not this origin');
   assert.match(await response.text(), /not a port this viewer serves/);
+});
+
+test('the live origin cannot POST to the viewer on the port beside it', async (t) => {
+  // The finding's own reproduction (mwg-train-4oyp): the live origin serves untrusted model-written site code, and
+  // cookies are scoped by host rather than port, so a page on the live port carries the viewer's cookies - SameSite
+  // compares site, which a port does not affect. While the viewer listener named the live port as one of its own, that
+  // code could POST to /tuning/generate (which spends money) and to the rest of the state-changing surface.
+  const livePort = 7701;
+  const base = await serve(t, { livePort });
+  const viewerOrigin = new URL(base).origin;
+  assert.notEqual(new URL(base).port, String(livePort), 'the fixture viewer is not on the live port');
+  const post = (path, headers) => fetch(`${base}${path}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: '{}',
+    redirect: 'manual',
+  });
+
+  for (const headers of [
+    { origin: `http://127.0.0.1:${livePort}` },
+    { referer: `http://127.0.0.1:${livePort}/project/booking-raw` },
+  ]) {
+    const response = await post('/tuning/generate', headers);
+    assert.equal(response.status, 403, `${JSON.stringify(headers)} is the live origin, and must be refused`);
+    assert.match(await response.text(), /not a port this viewer serves/);
+  }
+
+  // The viewer's own origin is still admitted: this closes the neighbouring port, not the viewer's own pages. The
+  // route below is one the viewer listener does not serve, so a 404 - rather than the origin refusal - is the proof
+  // that the gate let the request through to the router, and that nothing acted on it.
+  const own = await post('/live/account-recovery-hono/original/start', { origin: viewerOrigin });
+  assert.equal(own.status, 404, 'a POST from the viewer origin reaches the router');
+  assert.doesNotMatch(await own.text(), /refused:/);
 });

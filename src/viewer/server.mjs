@@ -332,10 +332,18 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  * other half - a POST with neither Origin nor Referer is refused rather than assumed safe, which is a deliberate
  * change for curl-style use (set -H 'Origin: http://127.0.0.1:7700').
  *
- * The PORT is deliberately not part of the rule. The viewer's own port is not known here (the CLI binds it and a
- * test binds 0), while the live origin is a different port on the same host by design, so a port rule would either
- * refuse the serve-live form or need the port threaded through this module for no security gain worth having: a page
- * served from another port on this host means something already runs on this host.
+ * The PORT is part of the rule, and WHICH ports are admissible is the caller's decision, not a property of the host:
+ * each listener names only the origins it is willing to take a state-changing request from. The port the request
+ * itself arrived on is always admissible - a POST back to the port it reached is this listener by definition - and
+ * viewerPort/livePort add the paired origins the caller has declared.
+ *
+ * A page served from ANOTHER port on this host is a DIFFERENT origin, and it must be treated as one. Cookies are
+ * scoped by host and ignore the port, and SameSite compares site, which a port does not affect, so a page on one of
+ * this host's ports carries the viewer's cookies on every other port of that host. That is why the viewer listener
+ * names its own port and NOT the live port: the live origin serves untrusted model-written site code, and admitting
+ * it here let that code forge state-changing and paid POSTs against viewer routes (mwg-train-4oyp). The live listener
+ * is the only one that names the live port, and it also names the viewer's, because the serve-live Start form is
+ * rendered on viewer pages.
  */
 export function originVerdict(request, { viewerPort = null, livePort = null } = {}) {
   const host = String(request.headers.host ?? '');
@@ -361,9 +369,9 @@ export function originVerdict(request, { viewerPort = null, livePort = null } = 
   if (origin.protocol !== `${scheme}:`) {
     return { allowed: false, reason: `origin ${origin.origin} is not served over ${scheme}` };
   }
-  // The port has to be one of ours: the port the request itself arrived on, this viewer's own (learned when the
-  // socket binds, since the CLI and a test do not always pass it), or the live origin's, which is a different port
-  // on the same host by design.
+  // The port has to be one of those the calling listener named: the port the request itself arrived on, this
+  // viewer's own (learned when the socket binds, since the CLI and a test do not always pass it), or - only when the
+  // caller passed it - the live origin's, which is a different port on the same host by design.
   //
   // The scheme's default port (80 for http, 443 for https) is admitted ONLY when the request did not name a port
   // either, because a Host without a port is a request that arrived on the default port - so a page on
@@ -880,8 +888,11 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
 
       const liveOrigin = liveOriginFor(request, livePort);
 
-      // Every state-changing request is checked here, before any route can act on it (mwg-train-we0o).
-      if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
+      // Every state-changing request is checked here, before any route can act on it (mwg-train-we0o). Only the
+      // viewer's own port is named: the live port is NOT an origin this listener admits, because the live origin runs
+      // untrusted site code and cookies are shared across the ports of one host, so naming it here let that code forge
+      // posts against these routes (mwg-train-4oyp).
+      if (crossOriginRefusal(request, response, { viewerPort })) return;
 
       if (path === '/healthz') return textResponse(response, 'ok');
 
@@ -1149,7 +1160,9 @@ export function createViewer({ corpusRoot, stateDir, identityConfigPath = join(R
       const viewerOrigin = viewerOriginFor(request, viewerPort);
       const livePage = (title, body) => page(title, body, { navOrigin: viewerOrigin });
 
-      // The serve-live form posts to this origin (a different port on the same host), so it needs the same check.
+      // The serve-live form posts to this origin (a different port on the same host), so it needs the same check - and
+      // this listener is the one that names the viewer's port for it, since the form that posts here is rendered on
+      // viewer pages.
       if (crossOriginRefusal(request, response, { viewerPort, livePort })) return;
 
       if (path === '/healthz') return textResponse(response, 'ok');
