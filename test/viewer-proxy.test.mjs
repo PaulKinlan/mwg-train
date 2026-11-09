@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { Readable, PassThrough } from 'node:stream';
 
-import { outboundHeaders, assertNoAuthHeaders, proxyRequest, ForbiddenHeaderError } from '../src/viewer/proxy.mjs';
+import { outboundHeaders, assertNoAuthHeaders, proxyRequest, ForbiddenHeaderError, MAX_PROXY_BODY_BYTES } from '../src/viewer/proxy.mjs';
 import { Sandbox } from '../src/viewer/sandbox.mjs';
 
 const FIXTURE = new URL('../test-fixtures/sites/echo', import.meta.url).pathname;
@@ -180,4 +180,96 @@ test('set-cookie is namespaced on the way out and restored on the way in', { ski
     });
     assert.equal(JSON.parse((await echo.done).body).headers.cookie, 'session=fake-demo-session');
   });
+});
+
+/**
+ * A request stream that keeps producing same-sized chunks until the consumer stops reading it.
+ * `produced()` reports what the source was actually asked for, which is how a test proves the
+ * proxy stopped reading an oversized body instead of buffering it to the end.
+ */
+function streamingRequest({ method = 'POST', headers = {}, chunkSize, maxChunks }) {
+  const chunk = Buffer.alloc(chunkSize, 0x61);
+  let chunksProduced = 0;
+  const stream = new Readable({
+    read() {
+      if (chunksProduced >= maxChunks) return stream.push(null);
+      chunksProduced += 1;
+      stream.push(chunk);
+    },
+  });
+  stream.headers = headers;
+  stream.method = method;
+  stream.produced = () => ({ chunks: chunksProduced, bytes: chunksProduced * chunkSize });
+  return stream;
+}
+
+/** A sandbox stand-in that records what the proxy handed it and answers 200 'forwarded'. */
+function stubSandbox() {
+  const calls = [];
+  return {
+    calls,
+    request: async (args) => {
+      calls.push(args);
+      return { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' }, bodyBase64: Buffer.from('forwarded').toString('base64') };
+    },
+  };
+}
+
+test('a declared content-length past the cap is refused 413 before the body is buffered', async () => {
+  const sandbox = stubSandbox();
+  const response = fakeResponse();
+  // The declaration alone must be enough: nothing has arrived yet, and the body below is empty.
+  const request = fakeRequest({ method: 'POST', headers: { 'content-length': String(MAX_PROXY_BODY_BYTES + 1) }, body: '' });
+  await proxyRequest({ request, response, sandbox, prefix: PREFIX, sitePath: '/submit', cookieNamespace: NS });
+  const result = await response.done;
+  assert.equal(result.statusCode, 413);
+  assert.equal(result.headers.connection, 'close');
+  assert.match(result.body, /request body too large/);
+  assert.equal(sandbox.calls.length, 0, 'an oversized body must never reach the sandbox');
+});
+
+test('a chunked body past the cap is aborted mid-stream and refused 413', async () => {
+  const sandbox = stubSandbox();
+  const response = fakeResponse();
+  const CHUNK = 64 * 1024;
+  const TOTAL_CHUNKS = 64; // 4 MiB offered, 1 MiB accepted: the source must not be drained
+  const request = streamingRequest({ chunkSize: CHUNK, maxChunks: TOTAL_CHUNKS }); // no content-length: the running total is the only bound
+  await proxyRequest({ request, response, sandbox, prefix: PREFIX, sitePath: '/submit', cookieNamespace: NS });
+  const result = await response.done;
+  assert.equal(result.statusCode, 413);
+  const produced = request.produced();
+  assert.ok(produced.bytes > MAX_PROXY_BODY_BYTES, 'the cap must be crossed before the refusal is justified');
+  // One chunk may already be in flight in the readable's own buffer when the pause lands; what must not
+  // happen is the source being drained.
+  assert.ok(produced.bytes <= MAX_PROXY_BODY_BYTES + 2 * CHUNK, `reading must stop within a chunk or two of the cap, produced ${produced.bytes}`);
+  assert.ok(produced.chunks < TOTAL_CHUNKS, `the stream was drained (${produced.chunks} chunks), not aborted`);
+  assert.equal(sandbox.calls.length, 0, 'an oversized body must never reach the sandbox');
+});
+
+test('a body within the cap is buffered and forwarded unchanged', async () => {
+  const sandbox = stubSandbox();
+  const CHUNK = 4 * 1024;
+  const request = streamingRequest({ chunkSize: CHUNK, maxChunks: 8 });
+  const response = fakeResponse();
+  await proxyRequest({ request, response, sandbox, prefix: PREFIX, sitePath: '/submit', cookieNamespace: NS });
+  const result = await response.done;
+  assert.equal(result.statusCode, 200);
+  assert.equal(sandbox.calls.length, 1);
+  assert.equal(sandbox.calls[0].method, 'POST');
+  assert.equal(sandbox.calls[0].path, '/submit');
+  assert.equal(sandbox.calls[0].body.length, CHUNK * 8);
+  assert.ok(sandbox.calls[0].body.equals(Buffer.alloc(CHUNK * 8, 0x61)), 'the body must cross the boundary byte-for-byte');
+});
+
+test('a body of exactly the cap is forwarded, not refused', async () => {
+  const sandbox = stubSandbox();
+  const CHUNK = 64 * 1024;
+  const chunks = MAX_PROXY_BODY_BYTES / CHUNK;
+  assert.ok(Number.isInteger(chunks), 'the cap must be a whole number of chunks for this boundary to be exact');
+  const request = streamingRequest({ chunkSize: CHUNK, maxChunks: chunks });
+  const response = fakeResponse();
+  await proxyRequest({ request, response, sandbox, prefix: PREFIX, sitePath: '/submit', cookieNamespace: NS });
+  const result = await response.done;
+  assert.equal(result.statusCode, 200);
+  assert.equal(sandbox.calls[0].body.length, MAX_PROXY_BODY_BYTES);
 });

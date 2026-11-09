@@ -16,6 +16,13 @@
  * 2. The site is reachable only through this proxy. The sandbox gives the site no other network
  *    and no filesystem bridge (see sandbox.mjs); requests cross the namespace boundary only over
  *    the child process's own stdio pipes, which carry no path authority a site could substitute.
+ *
+ * 3. NO REQUEST BODY EXHAUSTS THIS PROCESS. A body is buffered here before it is handed to the
+ *    sandbox, so the buffer is bounded by MAX_PROXY_BODY_BYTES: the declared content-length is
+ *    checked first and the running total is checked as chunks arrive, because a length header is
+ *    only a claim and a chunked body need not make one at all. A body past the cap is refused with
+ *    413 rather than buffered, so an oversized payload costs this process a header comparison, not
+ *    its heap.
  */
 import { rewriteCss, rewriteHtml, rewriteJs, rewriteLocation, rewriteSetCookie, restoreCookieNamespace } from './rewrite.mjs';
 
@@ -45,6 +52,64 @@ const REWRITE_BODY_TYPES = [
 ];
 
 export class ForbiddenHeaderError extends Error {}
+
+/** Thrown when a request body would exceed MAX_PROXY_BODY_BYTES. Carried out as a 413, never a 500. */
+class PayloadTooLargeError extends Error {}
+
+/**
+ * The largest request body this proxy will buffer before forwarding to a sandbox.
+ *
+ * A demo site's form posts kilobytes; 1 MiB is far above any legitimate one and far below what a
+ * request that means to exhaust this process's heap would need. The sandbox bridge has its own,
+ * much larger cap (16 MiB, bridge-wrapper.mjs), so the proxy must refuse here or the bytes would
+ * already have crossed the stdio boundary by the time the bridge said no.
+ */
+export const MAX_PROXY_BODY_BYTES = 1024 * 1024;
+
+/** Stop reading an oversized body without aborting the socket, so the 413 can still be delivered. */
+function stopReading(request) {
+  request.pause();
+  // The socket may abort once we stop draining it; the refusal is already decided.
+  request.on('error', () => {});
+}
+
+/**
+ * Buffer the request body under a hard byte cap, bounded BEFORE it is buffered.
+ *
+ * `content-length` is a claim: it is honoured as an early refusal, but never trusted as the only
+ * bound - the running total is checked on every chunk, so a chunked body that declares no length
+ * gets the same cap as one that declares it.
+ */
+function readBoundedBody(request, maxBytes) {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const declared = Number(request.headers?.['content-length'] ?? NaN);
+    if (Number.isFinite(declared) && declared > maxBytes) {
+      stopReading(request);
+      return rejectPromise(new PayloadTooLargeError(`declared content-length ${declared} exceeds the ${maxBytes}-byte cap`));
+    }
+    const chunks = [];
+    let total = 0;
+    let settled = false;
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      stopReading(request);
+      rejectPromise(error);
+    };
+    request.on('data', (chunk) => {
+      if (settled) return;
+      total += chunk.length;
+      if (total > maxBytes) return fail(new PayloadTooLargeError(`request body exceeded the ${maxBytes}-byte cap`));
+      chunks.push(chunk);
+    });
+    request.on('error', (error) => fail(error));
+    request.on('end', () => {
+      if (settled) return;
+      settled = true;
+      resolvePromise(Buffer.concat(chunks));
+    });
+  });
+}
 
 /** Build the outbound header set from the inbound request. Exported for tests. */
 export function outboundHeaders(inbound, { cookieNamespace }) {
@@ -84,9 +149,21 @@ export function assertNoAuthHeaders(headers) {
  * @param {string} args.sitePath    the request path with the prefix stripped, including query
  */
 export async function proxyRequest({ request, response, sandbox, prefix, sitePath, cookieNamespace }) {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
-  const body = Buffer.concat(chunks);
+  let body;
+  try {
+    body = await readBoundedBody(request, MAX_PROXY_BODY_BYTES);
+  } catch (error) {
+    if (!(error instanceof PayloadTooLargeError)) throw error;
+    // The refused body may be unread, so the connection ends with this response: a keep-alive
+    // response would leave the socket waiting for bytes nobody is going to drain.
+    response.writeHead(413, {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'no-store',
+      connection: 'close',
+    });
+    response.end(`request body too large: the cap is ${MAX_PROXY_BODY_BYTES} bytes\n`);
+    return;
+  }
 
   const headers = outboundHeaders(request.headers, { cookieNamespace });
   try {
