@@ -270,6 +270,33 @@ export function page(title, body, { navOrigin = '' } = {}) {
 }
 
 /**
+ * A markdown link target becomes an `href`, and an `href` is something the browser navigates to and then
+ * executes or reads: `javascript:`, `data:` and `vbscript:` run script in the viewer's origin, and `file:`
+ * reaches the local disk. Only a web URL, a path relative to the viewer, or a same-page fragment is safe to
+ * emit, so the target is checked against a scheme allowlist instead of being trusted because it sat in
+ * parentheses.
+ *
+ * The normalisation is not decoration: browsers ignore the casing of a scheme and remove any tab, LF or CR
+ * inside the value before parsing it, so `JavaScript:` and `java\tscript:` are the same URL as `javascript:`.
+ * The check normalises the same way first, then refuses anything that is still not a safe target. A refused
+ * target is refused rather than rewritten to `#`: the reader gets the link text, not a link that goes
+ * somewhere the document did not ask for.
+ */
+export function safeMarkdownHref(target) {
+  const value = String(target ?? '').replace(/[\t\n\r]/g, '').trim();
+  // A C0 control left in the value (a leading NUL, say) is stripped by the URL parser too, so the string the
+  // scheme check sees would not be the string the browser navigates to. Refuse rather than guess which one it is.
+  if (!value || /[\u0000-\u001f\u007f]/.test(value)) return null;
+  // `//host/path` is a URL to another origin, not a path inside this viewer, whatever its first character says.
+  if (value.startsWith('//')) return null;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value);
+  if (scheme) return /^https?$/i.test(scheme[1]) ? value : null;
+  // No scheme at all: `/docs/x.md`, `./x.md`, `../x.md`, `#section` and a bare relative `x.md` all navigate
+  // within or relative to the viewer, so they carry no scheme to execute.
+  return value;
+}
+
+/**
  * Minimal markdown renderer for docs/PIPELINE.md (the doc stays the source of truth; the viewer
  * renders it, so the pipeline page cannot drift from the doc). Handles headings, pipe tables,
  * lists, paragraphs, and inline bold/code formatting. Everything is escaped before formatting.
@@ -277,7 +304,13 @@ export function page(title, body, { navOrigin = '' } = {}) {
 export function renderMarkdown(md) {
   const inline = (text) =>
     escapeHtml(text)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, target) => {
+        // `target` is already escaped here, which can only be stricter: escaping adds `&`-entities and the
+        // characters of the safe prefixes themselves (`h`, `/`, `.`, `#`) are never escaped, so a target
+        // refused on its escaped form could not have been safe in its raw form either.
+        const href = safeMarkdownHref(target);
+        return href ? `<a href="${href}">${label}</a>` : label;
+      })
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
