@@ -288,7 +288,10 @@ export function safeMarkdownHref(target) {
   // scheme check sees would not be the string the browser navigates to. Refuse rather than guess which one it is.
   if (!value || /[\u0000-\u001f\u007f]/.test(value)) return null;
   // `//host/path` is a URL to another origin, not a path inside this viewer, whatever its first character says.
-  if (value.startsWith('//')) return null;
+  // The URL parser treats a `\` in a special URL as a `/`, so `\\host/path`, `\/host` and `/\host` are the same
+  // network-path reference spelled differently: the check looks at the first two characters, not at a literal
+  // `//` prefix, or the backslash spellings would slip through as if they were paths here.
+  if (/^[\\/]{2}/.test(value)) return null;
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value);
   if (scheme) return /^https?$/i.test(scheme[1]) ? value : null;
   // No scheme at all: `/docs/x.md`, `./x.md`, `../x.md`, `#section` and a bare relative `x.md` all navigate
