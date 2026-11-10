@@ -111,6 +111,12 @@ function* walkFiles(root, skipDirs) {
  * Scan one tree (or a single file) for owner-identifying material. Returns
  * { status: 'PASS' | 'FAIL', findings }. `findings` entries: { file, line, patternId, kind }.
  * The matched text is deliberately absent.
+ *
+ * A file the scan cannot read as text is a scan-error FINDING, never a silent skip: an oversized file
+ * and a binary both FAIL the tree. Skipping an unscannable file quietly made the gate report clean
+ * about bytes it never inspected. Extensions the owner has declared unscannable (media, archives,
+ * databases) are still skipped explicitly through `skip_extensions`, and that skip is reviewable in
+ * docs/eval/owner-identity.json rather than implied by content sniffing.
  */
 export function scanTree(root, matchers, options = {}) {
   const skipDirs = options.skip_dirs ?? options.skipDirs ?? ['node_modules', '.git'];
@@ -122,17 +128,20 @@ export function scanTree(root, matchers, options = {}) {
   for (const file of files) {
     const ext = file.slice(file.lastIndexOf('.')).toLowerCase();
     if (skipExtensions.includes(ext)) continue;
+    const rel = relative(root, file) || file;
     const size = statSync(file).size;
     if (size > maxBytes) {
-      findings.push({ file: file, line: null, patternId: 'file-too-large-to-scan', kind: 'scan-error' });
+      findings.push({ file: rel, line: null, patternId: 'file-too-large-to-scan', kind: 'scan-error' });
       continue;
     }
     const buffer = readFileSync(file);
-    if (looksBinary(buffer)) continue;
+    if (looksBinary(buffer)) {
+      findings.push({ file: rel, line: null, patternId: 'binary-file-not-scannable', kind: 'scan-error' });
+      continue;
+    }
     const text = buffer.toString('utf8');
     const lowered = text.toLowerCase();
     const lines = text.split('\n');
-    const rel = relative(root, file) || file;
     for (const literal of matchers.literals) {
       let index = lowered.indexOf(literal.needle);
       while (index !== -1) {
