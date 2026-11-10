@@ -3,6 +3,9 @@
  * Fail-closed behaviour is tested as strictly as detection: a scan that cannot run is a refusal.
  * Two regressions are pinned here by name: an un-scannable binary is a scan error rather than a
  * silent skip, and the TRAINING corpus is scanned by the --corpus gate, not only the eval corpus.
+ * The reviewer round-1 findings are pinned too: a missing, unparseable, empty or malformed
+ * TRAINING_CORPUS.json fails the gate closed instead of reading as an empty training corpus, and an
+ * alternate --run still scans every training project.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -60,8 +63,8 @@ function keepTrainingTree(corpusRoot, projectId, files) {
   return { project_id: projectId, archetype: 'booking', framework: 'raw', defects: [], tree_sha: hashTree(dir) };
 }
 
-function runCorpusScan(corpusRoot) {
-  return spawnSync(process.execPath, [SCAN_SCRIPT, '--corpus', corpusRoot], { cwd: REPO_ROOT, encoding: 'utf8' });
+function runCorpusScan(corpusRoot, extraArgs = []) {
+  return spawnSync(process.execPath, [SCAN_SCRIPT, '--corpus', corpusRoot, ...extraArgs], { cwd: REPO_ROOT, encoding: 'utf8' });
 }
 
 test('the shipped config loads and compiles', () => {
@@ -276,6 +279,75 @@ test('an unscored training original is re-derived from the briefs and hash-verif
   const run = runCorpusScan(corpusRoot);
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
   assert.match(run.stdout, /PASS tr-01-hono \(original\)/);
+  assert.match(run.stdout, /owner-auth scan: 2 tree\(s\), 0 failed/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('fail-closed: a missing TRAINING_CORPUS.json stops the gate (mwg-train-9way review)', () => {
+  // Before the fix the manifest read as null and the training half of the corpus vanished, so the
+  // gate scanned the eval pair alone and reported the corpus clean without any training project.
+  const { root, corpusRoot } = makeCorpus();
+  rmSync(join(corpusRoot, 'TRAINING_CORPUS.json'));
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 3, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json is missing/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('fail-closed: an unparseable TRAINING_CORPUS.json stops the gate (mwg-train-9way review)', () => {
+  const { root, corpusRoot } = makeCorpus();
+  writeFileSync(join(corpusRoot, 'TRAINING_CORPUS.json'), 'not json{');
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 3, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json is unreadable or not valid JSON/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('fail-closed: an empty TRAINING_CORPUS.json stops the gate (mwg-train-9way review)', () => {
+  const { root, corpusRoot } = makeCorpus();
+  for (const empty of [{ projects: [] }, {}]) {
+    writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), empty);
+    const run = runCorpusScan(corpusRoot);
+    assert.equal(run.status, 3, `${JSON.stringify(empty)}\n${run.stdout}\n${run.stderr}`);
+    assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json (lists no training projects|carries no projects array)/);
+  }
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('fail-closed: a training entry with no recorded tree sha stops the gate (mwg-train-9way review)', () => {
+  // A malformed entry is not a training project the gate can verify: its measured original cannot
+  // be reproduced, so reading it as absent would be a PASS over material nobody verified.
+  const { root, corpusRoot } = makeCorpus();
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [{ project_id: 'tr-99-raw', archetype: 'booking', framework: 'raw' }] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 3, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json project 0 is not a training project/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('an alternate --run still scans the training projects (mwg-train-9way review)', () => {
+  // loadCorpus binds training projects only for the run CORPUS.json records, so a gate that read
+  // its project list from the --run view walked past every tr-* project on any other run.
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>built by paulkinlan</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  // A later run the committed manifest never recorded: its projects carry no decision in the view.
+  writeJson(join(corpusRoot, 'out', 'run-2', 'yield.json'), { run_id: 'run-2' });
+  const run = runCorpusScan(corpusRoot, ['--run', 'run-2']);
+  assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /FAIL tr-99-raw \(original\)/);
+  assert.match(run.stdout, /owner-identifier/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('an alternate --run scans a clean training project and passes it', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  writeJson(join(corpusRoot, 'out', 'run-2', 'yield.json'), { run_id: 'run-2' });
+  const run = runCorpusScan(corpusRoot, ['--run', 'run-2']);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /PASS tr-99-raw \(original\)/);
   assert.match(run.stdout, /owner-auth scan: 2 tree\(s\), 0 failed/);
   rmSync(root, { recursive: true, force: true });
 });

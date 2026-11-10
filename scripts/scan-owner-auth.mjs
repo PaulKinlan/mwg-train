@@ -18,7 +18,10 @@
  * trains on, so every one of them is scanned - its measured original, its uplifted copy where an
  * uplifted sha is recorded, and the training manifest itself as the corpus record. Training
  * projects are gated whether or not a run scored them accepted: acceptance is what admits an eval
- * pair to the corpus, while a training project is in the corpus by being in that manifest.
+ * pair to the corpus, while a training project is in the corpus by being in that manifest. They are
+ * loaded independently of --run, so choosing an alternate eval run cannot walk past them, and a
+ * missing, unreadable, empty, or malformed TRAINING_CORPUS.json is a fail-closed error rather than
+ * an empty training corpus that scans nothing and passes.
  *
  * Exit code 0 only if every scanned tree is clean. A file the scan cannot read (oversized or
  * binary) is a scan error, not a skip: the tree fails.
@@ -29,7 +32,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
-import { listRuns, loadCorpus } from '../src/viewer/corpus.mjs';
+import { listRuns, loadCorpus, loadTrainingProjects } from '../src/viewer/corpus.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
 import { hashTree } from '../src/corpus/tree-hash.mjs';
 
@@ -183,19 +186,29 @@ async function main() {
       // with no decisions yet must not leave the gate scanning zero accepted pairs and passing.
       const manifestRun = readJson(join(args.corpus, 'CORPUS.json'))?.run_id ?? null;
       const runId = args.run ?? manifestRun ?? listRuns(args.corpus)[0] ?? null;
-      // includeTraining: the training corpus is served by the viewer and is the material a model
-      // learns from, so it is in the gate's scope. Without it the gate walked past every tr-*
-      // project and reported the corpus clean without having read them (mwg-train-9way).
-      const corpus = loadCorpus(args.corpus, runId, { includeTraining: true });
-      const trainingIds = new Set(
-        (readJson(join(args.corpus, 'TRAINING_CORPUS.json'))?.projects ?? []).map((entry) => entry.project_id),
-      );
-      if (corpus.projects.length === 0) {
+      // includeTraining: false - the training corpus is loaded on its own below, so it is scanned
+      // for every --run rather than only for the run the eval manifest records.
+      const corpus = loadCorpus(args.corpus, runId, { includeTraining: false });
+      // Training projects are bound to TRAINING_CORPUS.json, never to the selected run's decisions:
+      // an alternate --run selects the eval view, and must not select away the material a model
+      // trains on. Strict: a manifest that cannot supply training projects fails the gate here
+      // instead of reading as an empty training corpus that scans nothing.
+      let trainingProjects;
+      try {
+        trainingProjects = loadTrainingProjects(args.corpus, { strict: true }).projects;
+      } catch (error) {
+        console.error(`ERROR (fail-closed): ${error.message}`);
+        return 3;
+      }
+      const work = [
+        ...corpus.projects.map((project) => ({ project, training: false })),
+        ...trainingProjects.map((project) => ({ project, training: true })),
+      ];
+      if (work.length === 0) {
         console.error('ERROR (fail-closed): no projects found - nothing to accept');
         return 3;
       }
-      for (const project of corpus.projects) {
-        const training = trainingIds.has(project.id);
+      for (const { project, training } of work) {
         // The eval gate is over ACCEPTED pairs (Paul's rule): a project with no accepted decision has
         // no accepted pair to contaminate yet. A training project is not gated on acceptance - it is
         // corpus by being in TRAINING_CORPUS.json, so every one of them is scanned.

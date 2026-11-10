@@ -43,6 +43,112 @@ export function listRuns(corpusRoot) {
     .reverse();
 }
 
+/** A TRAINING_CORPUS.json the strict reader refuses: missing, unreadable, empty, or malformed. */
+export class TrainingCorpusError extends Error {}
+
+/**
+ * Bind the training corpus projects to project records.
+ *
+ * The training manifest is the record of record for a training project, and it says nothing about
+ * any eval run: a tr-* project is in the corpus by being in TRAINING_CORPUS.json, not by a run
+ * scoring it. Loading is therefore independent of the selected run, so an alternate `--run` (the
+ * owner-auth gate) or `?run=` (the viewer) still binds every training project to its recorded tree
+ * sha instead of walking past all of them (mwg-train-9way review).
+ *
+ * `strict` is the gate's reading: a manifest that is missing, unreadable, carries no projects array,
+ * lists no projects, or lists an entry without a project id and a recorded tree sha is an error.
+ * A lenient read of a broken manifest would be an empty training corpus, which a gate scans as
+ * nothing and reports clean.
+ */
+export function loadTrainingProjects(corpusRoot, { strict = false, knownKeys = new Set(), knownIds = new Set() } = {}) {
+  const manifestPath = join(corpusRoot, 'TRAINING_CORPUS.json');
+  const present = existsSync(manifestPath);
+  const trainingManifest = present ? readJson(manifestPath) : null;
+  if (strict) {
+    if (!present) throw new TrainingCorpusError(`TRAINING_CORPUS.json is missing: ${manifestPath}`);
+    if (trainingManifest === null) {
+      throw new TrainingCorpusError(`TRAINING_CORPUS.json is unreadable or not valid JSON: ${manifestPath}`);
+    }
+    if (!Array.isArray(trainingManifest.projects)) {
+      throw new TrainingCorpusError(`TRAINING_CORPUS.json carries no projects array: ${manifestPath}`);
+    }
+    if (trainingManifest.projects.length === 0) {
+      throw new TrainingCorpusError(`TRAINING_CORPUS.json lists no training projects: ${manifestPath}`);
+    }
+    const invalid = trainingManifest.projects.findIndex((entry) => !entry || typeof entry !== 'object'
+      || typeof entry.project_id !== 'string' || entry.project_id === ''
+      || typeof (entry.tree_sha ?? entry.original_sha) !== 'string' || (entry.tree_sha ?? entry.original_sha) === '');
+    if (invalid !== -1) {
+      throw new TrainingCorpusError(
+        `TRAINING_CORPUS.json project ${invalid} is not a training project - it needs a project_id and a recorded tree_sha: ${manifestPath}`,
+      );
+    }
+  }
+  const trainingRecords = readJson(join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json'));
+  const projects = [];
+  const scoredTrainingByKey = new Map();
+  const scoredTrainingById = new Map();
+  for (const entry of trainingRecords?.projects ?? []) {
+    if (entry.build_key) scoredTrainingByKey.set(entry.build_key, entry);
+    if (!scoredTrainingById.has(entry.project_id)) scoredTrainingById.set(entry.project_id, entry);
+  }
+  if (Array.isArray(trainingManifest?.projects)) {
+    for (const entry of trainingManifest.projects) {
+      const entryKey = entry.build_key ?? entry.project_id;
+      if (knownKeys.has(entryKey) || (!entry.build_key && knownIds.has(entry.project_id))) continue;
+      knownKeys.add(entryKey);
+      knownIds.add(entry.project_id);
+      const scored = (entry.build_key && scoredTrainingByKey.get(entry.build_key)) ?? scoredTrainingById.get(entry.project_id) ?? null;
+      const originalSha = entry.tree_sha ?? entry.original_sha ?? null;
+      const model = entry.model ?? scored?.model ?? null;
+      const buildKey = entry.build_key ?? scored?.build_key ?? null;
+      projects.push({
+        id: entry.project_id,
+        model,
+        buildKey,
+        spec: {
+          archetype: entry.archetype,
+          archetype_title: entry.topic ? `${entry.family_id} · ${entry.topic}` : entry.family_id,
+          framework: { name: entry.framework },
+          seeded_defects: entry.defects ?? [],
+          required_rules: [],
+        },
+        specPath: null,
+        originalTreeDir: join(corpusRoot, 'projects', entry.project_id),
+        upliftedTreeDir: null,
+        decision: {
+          project_id: entry.project_id,
+          archetype: entry.archetype,
+          framework: entry.framework,
+          model,
+          build_key: buildKey,
+          has_run: Boolean(scored?.decision),
+          accepted: scored?.decision ? Boolean(scored.decision.accepted) : null,
+          category: scored?.decision?.category ?? null,
+          detail: scored?.decision?.detail ?? [
+            'from the committed training corpus manifest (pilot/TRAINING_CORPUS.json); scaffolded and hash-recorded, not yet scored in a browser run',
+          ],
+          improved_rules: scored?.decision?.improved_rules ?? [],
+          regressed_rules: scored?.decision?.regressed_rules ?? [],
+          new_security_findings: scored?.decision?.new_security_findings ?? [],
+          seeded_defects: entry.defects ?? [],
+          original_sha: originalSha,
+          uplifted_sha: scored?.uplifted_sha ?? null,
+          uplift_applied: scored?.uplift?.applied ?? [],
+          uplift_skipped: scored?.uplift?.skipped ?? [],
+          uplift_failed: scored?.uplift?.failed ?? [],
+          record_source: 'manifest',
+        },
+        original: scored?.original ?? null,
+        uplifted: scored?.uplifted ?? null,
+        evidenceDir: null,
+        runDir: null,
+      });
+    }
+  }
+  return { projects, manifest: trainingManifest, manifestPath };
+}
+
 /**
  * Load the corpus view for one run (or all projects without a run). Returns:
  * { runId, runs, projects: [ { id, spec, decision, original, uplifted, evidenceDir, runDir,
@@ -189,68 +295,7 @@ export function loadCorpus(corpusRoot, runId = null, { includeTraining = false }
         runDir: null,
       });
     }
-    const trainingManifest = includeTraining ? readJson(join(corpusRoot, 'TRAINING_CORPUS.json')) : null;
-    const trainingRecords = includeTraining ? readJson(join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json')) : null;
-    const scoredTrainingByKey = new Map();
-    const scoredTrainingById = new Map();
-    for (const entry of trainingRecords?.projects ?? []) {
-      if (entry.build_key) scoredTrainingByKey.set(entry.build_key, entry);
-      if (!scoredTrainingById.has(entry.project_id)) scoredTrainingById.set(entry.project_id, entry);
-    }
-    if (Array.isArray(trainingManifest?.projects)) {
-      for (const entry of trainingManifest.projects) {
-        const entryKey = entry.build_key ?? entry.project_id;
-        if (knownKeys.has(entryKey) || (!entry.build_key && knownIds.has(entry.project_id))) continue;
-        knownKeys.add(entryKey);
-        knownIds.add(entry.project_id);
-        const scored = (entry.build_key && scoredTrainingByKey.get(entry.build_key)) ?? scoredTrainingById.get(entry.project_id) ?? null;
-        const originalSha = entry.tree_sha ?? entry.original_sha ?? null;
-        const model = entry.model ?? scored?.model ?? null;
-        const buildKey = entry.build_key ?? scored?.build_key ?? null;
-        projects.push({
-          id: entry.project_id,
-          model,
-          buildKey,
-          spec: {
-            archetype: entry.archetype,
-            archetype_title: entry.topic ? `${entry.family_id} · ${entry.topic}` : entry.family_id,
-            framework: { name: entry.framework },
-            seeded_defects: entry.defects ?? [],
-            required_rules: [],
-          },
-          specPath: null,
-          originalTreeDir: join(corpusRoot, 'projects', entry.project_id),
-          upliftedTreeDir: null,
-          decision: {
-            project_id: entry.project_id,
-            archetype: entry.archetype,
-            framework: entry.framework,
-            model,
-            build_key: buildKey,
-            has_run: Boolean(scored?.decision),
-            accepted: scored?.decision ? Boolean(scored.decision.accepted) : null,
-            category: scored?.decision?.category ?? null,
-            detail: scored?.decision?.detail ?? [
-              'from the committed training corpus manifest (pilot/TRAINING_CORPUS.json); scaffolded and hash-recorded, not yet scored in a browser run',
-            ],
-            improved_rules: scored?.decision?.improved_rules ?? [],
-            regressed_rules: scored?.decision?.regressed_rules ?? [],
-            new_security_findings: scored?.decision?.new_security_findings ?? [],
-            seeded_defects: entry.defects ?? [],
-            original_sha: originalSha,
-            uplifted_sha: scored?.uplifted_sha ?? null,
-            uplift_applied: scored?.uplift?.applied ?? [],
-            uplift_skipped: scored?.uplift?.skipped ?? [],
-            uplift_failed: scored?.uplift?.failed ?? [],
-            record_source: 'manifest',
-          },
-          original: scored?.original ?? null,
-          uplifted: scored?.uplifted ?? null,
-          evidenceDir: null,
-          runDir: null,
-        });
-      }
-    }
+    if (includeTraining) projects.push(...loadTrainingProjects(corpusRoot, { knownKeys, knownIds }).projects);
     projects.sort((a, b) => a.id.localeCompare(b.id) || String(a.model ?? '').localeCompare(String(b.model ?? '')));
     // The manifest's run id is a valid selection in every view it applies to - including explicit
     // ?run= requests - or the live URLs the index generates would 404 on their own run.
