@@ -56,9 +56,11 @@ export class TrainingCorpusError extends Error {}
  * sha instead of walking past all of them (mwg-train-9way review).
  *
  * `strict` is the gate's reading: a manifest that is missing, unreadable, carries no projects array,
- * lists no projects, or lists an entry without a project id and a recorded tree sha is an error.
- * A lenient read of a broken manifest would be an empty training corpus, which a gate scans as
- * nothing and reports clean.
+ * lists no projects, lists an entry without a project id and a recorded tree sha, or lists two
+ * entries under one corpus key is an error. A lenient read of a broken manifest would be an empty
+ * training corpus, which a gate scans as nothing and reports clean; a lenient read of a duplicate
+ * key would be a corpus missing a tree, because the loader keys entries by corpus key and the
+ * second entry is skipped rather than scanned.
  */
 export function loadTrainingProjects(corpusRoot, { strict = false, knownKeys = new Set(), knownIds = new Set() } = {}) {
   const manifestPath = join(corpusRoot, 'TRAINING_CORPUS.json');
@@ -82,6 +84,25 @@ export function loadTrainingProjects(corpusRoot, { strict = false, knownKeys = n
       throw new TrainingCorpusError(
         `TRAINING_CORPUS.json project ${invalid} is not a training project - it needs a project_id and a recorded tree_sha: ${manifestPath}`,
       );
+    }
+    // A duplicate key is a tree the gate never sees: the loader keys entries by corpus key and
+    // skips a repeat, so a clean first entry would carry a second tree past the scan unreviewed.
+    const firstKeyOf = new Map();
+    const firstIdOf = new Map();
+    for (const [index, entry] of trainingManifest.projects.entries()) {
+      if (firstIdOf.has(entry.project_id)) {
+        throw new TrainingCorpusError(
+          `TRAINING_CORPUS.json project ${index} repeats project_id ${entry.project_id} from project ${firstIdOf.get(entry.project_id)}: ${manifestPath}`,
+        );
+      }
+      firstIdOf.set(entry.project_id, index);
+      const key = entry.build_key ?? entry.project_id;
+      if (firstKeyOf.has(key)) {
+        throw new TrainingCorpusError(
+          `TRAINING_CORPUS.json project ${index} repeats corpus key ${key} from project ${firstKeyOf.get(key)} (build_key, or project_id when no build_key is recorded): ${manifestPath}`,
+        );
+      }
+      firstKeyOf.set(key, index);
     }
   }
   const trainingRecords = readJson(join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json'));

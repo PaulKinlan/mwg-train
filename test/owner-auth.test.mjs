@@ -351,3 +351,31 @@ test('an alternate --run scans a clean training project and passes it', () => {
   assert.match(run.stdout, /owner-auth scan: 2 tree\(s\), 0 failed/);
   rmSync(root, { recursive: true, force: true });
 });
+
+test('fail-closed: a duplicate build_key in TRAINING_CORPUS.json stops the gate (mwg-train-9way review 2)', () => {
+  // The loader keys training entries by corpus key and skips a repeat, so before the fix a clean
+  // first entry carried a second, owner-identifying tree past the scan: the gate reported the
+  // corpus clean while the duplicate was never read.
+  const { root, corpusRoot } = makeCorpus();
+  const clean = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  const leaky = keepTrainingTree(corpusRoot, 'tr-99-raw-dupe', { 'index.html': '<html><body>built by paulkinlan</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), {
+    projects: [{ ...clean, build_key: 'tr-99-raw-v1' }, { ...leaky, build_key: 'tr-99-raw-v1' }],
+  });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 3, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json project 1 repeats corpus key tr-99-raw-v1 from project 0/);
+  assert.doesNotMatch(run.stdout, /PASS/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('fail-closed: a duplicate project_id in TRAINING_CORPUS.json stops the gate (mwg-train-9way review 2)', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const clean = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [clean, { ...clean, build_key: 'tr-99-raw-v2' }] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 3, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stderr, /ERROR \(fail-closed\): TRAINING_CORPUS\.json project 1 repeats project_id tr-99-raw from project 0/);
+  assert.doesNotMatch(run.stdout, /PASS/);
+  rmSync(root, { recursive: true, force: true });
+});
