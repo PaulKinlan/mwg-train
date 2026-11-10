@@ -1,25 +1,67 @@
 /**
  * Owner-auth scan tests: the corpus rule that no owner-identifying material may appear in a site.
  * Fail-closed behaviour is tested as strictly as detection: a scan that cannot run is a refusal.
+ * Two regressions are pinned here by name: an un-scannable binary is a scan error rather than a
+ * silent skip, and the TRAINING corpus is scanned by the --corpus gate, not only the eval corpus.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { buildMatchers, loadScanConfig, scanPair, scanRecordFiles, scanTree, ScanConfigError } from '../src/viewer/owner-auth.mjs';
+import { hashTree } from '../src/corpus/tree-hash.mjs';
 
 const CONFIG_PATH = new URL('../docs/eval/owner-identity.json', import.meta.url).pathname;
+const REPO_ROOT = new URL('..', import.meta.url).pathname;
+const SCAN_SCRIPT = join(REPO_ROOT, 'scripts/scan-owner-auth.mjs');
 
-function makeTree(files) {
-  const dir = mkdtempSync(join(tmpdir(), 'owner-auth-test-'));
+function writeFiles(dir, files) {
   for (const [name, content] of Object.entries(files)) {
     const path = join(dir, name);
     mkdirSync(join(path, '..'), { recursive: true });
     writeFileSync(path, content);
   }
   return dir;
+}
+
+function makeTree(files) {
+  return writeFiles(mkdtempSync(join(tmpdir(), 'owner-auth-test-')), files);
+}
+
+function writeJson(path, value) {
+  mkdirSync(join(path, '..'), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+/**
+ * A corpus root the --corpus gate can read: CORPUS.json (the eval manifest) plus TRAINING_CORPUS.json
+ * (the training manifest), with the trees each entry names written where the gate looks for them.
+ */
+function makeCorpus({ trainingProjects = [] } = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'owner-auth-corpus-'));
+  const corpusRoot = join(root, 'pilot');
+  mkdirSync(join(corpusRoot, 'projects'), { recursive: true });
+  writeJson(join(corpusRoot, 'CORPUS.json'), {
+    run_id: 'run-1',
+    run_kind: 'tree-hash-rederivation',
+    generated_at: '2026-01-01T00:00:00.000Z',
+    projects: [],
+  });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: trainingProjects });
+  return { root, corpusRoot };
+}
+
+/** Write a training tree where the gate looks for a kept copy, and return its manifest entry. */
+function keepTrainingTree(corpusRoot, projectId, files) {
+  const dir = writeFiles(join(corpusRoot, 'training-projects', projectId), files);
+  return { project_id: projectId, archetype: 'booking', framework: 'raw', defects: [], tree_sha: hashTree(dir) };
+}
+
+function runCorpusScan(corpusRoot) {
+  return spawnSync(process.execPath, [SCAN_SCRIPT, '--corpus', corpusRoot], { cwd: REPO_ROOT, encoding: 'utf8' });
 }
 
 test('the shipped config loads and compiles', () => {
@@ -169,4 +211,71 @@ test('corpus records are scanned too: a decision record embedding the owner fail
   assert.equal(scanRecordFiles([join(clean, 'decision.json'), join(clean, 'absent.json')], buildMatchers(config), config.scan).status, 'PASS');
   rmSync(dir, { recursive: true, force: true });
   rmSync(clean, { recursive: true, force: true });
+});
+
+test('a binary file is a scan error, not a silent skip (mwg-train-9way)', () => {
+  // The identifier is present in the bytes, but the file cannot be read as text. Before the fix the
+  // scan `continue`d here, so a tree carrying an unscannable payload reported PASS.
+  const dir = makeTree({
+    'index.html': 'hello',
+    'payload.bin': Buffer.concat([Buffer.from([0x00, 0x01]), Buffer.from('paulkinlan')]),
+  });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config), config.scan);
+  assert.equal(result.status, 'FAIL');
+  assert.equal(result.scan_errors, 1);
+  assert.deepEqual(result.findings, [
+    { file: 'payload.bin', line: null, patternId: 'binary-file-not-scannable', kind: 'scan-error' },
+  ]);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('a binary whose extension is declared unscannable stays skipped, not failed', () => {
+  // skip_extensions is the explicit, reviewable way to say "these bytes are not source". Content
+  // sniffing must not override it, or every screenshot in a served tree would fail the gate.
+  const dir = makeTree({ 'index.html': 'hello', 'shot.png': Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]) });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config), config.scan);
+  assert.equal(result.status, 'PASS', JSON.stringify(result.findings));
+  assert.equal(result.scan_errors, 0);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('the --corpus gate fails on owner material in a TRAINING corpus project (mwg-train-9way)', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', {
+    'index.html': '<html><body>built by paulkinlan</body></html>',
+  });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /FAIL tr-99-raw \(original\)/);
+  assert.match(run.stdout, /owner-identifier/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('the --corpus gate scans a clean TRAINING corpus project and passes it', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /PASS tr-99-raw \(original\)/);
+  assert.match(run.stdout, /PASS tr-99-raw \(corpus records\)/);
+  assert.match(run.stdout, /NO-UPLIFT tr-99-raw/);
+  assert.match(run.stdout, /owner-auth scan: 2 tree\(s\), 0 failed/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('an unscored training original is re-derived from the briefs and hash-verified before scanning', () => {
+  // No kept tree: the gate must scaffold the project from docs/train/briefs and refuse to scan it
+  // unless the regenerated tree hashes to the sha the training manifest recorded.
+  const manifest = JSON.parse(readFileSync(join(REPO_ROOT, 'pilot/TRAINING_CORPUS.json'), 'utf8'));
+  const entry = manifest.projects.find((project) => project.project_id === 'tr-01-hono');
+  const { root, corpusRoot } = makeCorpus({ trainingProjects: [entry] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /PASS tr-01-hono \(original\)/);
+  assert.match(run.stdout, /owner-auth scan: 2 tree\(s\), 0 failed/);
+  rmSync(root, { recursive: true, force: true });
 });
