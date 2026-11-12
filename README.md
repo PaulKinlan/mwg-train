@@ -128,8 +128,10 @@ show these guidance rows as N/A, not as scores inferred from newer code.
 - **7701, the live origin** — serves ONLY the sandboxed sites under `/live/<project>/<version>/`.
   Untrusted site code never shares an origin with the evidence pages: a different port is a
   different origin, so site JavaScript cannot read them. (Cookies are host-scoped, not
-  port-scoped, which is exactly why the proxy namespaces every cookie a site sets and forwards
-  only those back.)
+  port-scoped, which is exactly why the proxy namespaces every cookie a site sets - in
+  `Set-Cookie` on the way out, and in the page's own `document.cookie` through an inline shim,
+  so a site's script can neither collide with another instance's cookies nor read the viewer's -
+  and forwards only those back.)
 
 The viewer's `/tuning` workbench reads the authored `tr-*` training briefs, their A1 target-design
 images, deterministic scaffold records and any measured training sample. Select a family, prompt

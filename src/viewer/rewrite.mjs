@@ -9,6 +9,8 @@
  *   - JavaScript fetch('/...') / fetch(`...`) and XMLHttpRequest .open("METHOD", "/...")
  *   - the Location response header
  *   - Set-Cookie: names are namespaced and Path is scoped (see proxy.mjs for the why)
+ *   - document.cookie: an inline shim namespaces what the site's own script writes, and hides every
+ *     cookie that is not this instance's (see installCookieNamespace for the why)
  *
  * This is deliberately conservative: a construct outside these patterns is served unrewritten, and
  * the limitation is stated on the evidence page rather than papered over. `<base>` is NOT used: it
@@ -16,9 +18,32 @@
  * resolution, which would make the served copy differ in behaviour from the site at its own root.
  */
 
+import { createHash } from 'node:crypto';
+
 const HTML_ATTRS = ['href', 'src', 'action', 'formaction', 'poster'];
 
-export function rewriteHtml(body, prefix) {
+/**
+ * A cookie namespace is a cookie-name prefix, so it must be a token: the proxy builds it from
+ * route-validated project ids and versions. A namespace outside this shape is refused rather than
+ * emitted into a name no browser would store (and rather than inlined into a script unescaped).
+ */
+const COOKIE_NAMESPACE = /^[A-Za-z0-9_-]+$/;
+
+const requireCookieNamespace = (namespace) => {
+  if (typeof namespace !== 'string' || !COOKIE_NAMESPACE.test(namespace)) {
+    throw new TypeError(`cookie namespace must be a cookie-name token, got ${JSON.stringify(namespace)}`);
+  }
+  return namespace;
+};
+
+/**
+ * @param {string} body
+ * @param {string} prefix  the URL prefix this site is served under, e.g. /live/demo/original
+ * @param {string} [cookieNamespace] this instance's cookie namespace; its presence is what injects
+ *   the document.cookie shim, because a page served under a shared origin needs one and a rewrite
+ *   performed for any other purpose does not
+ */
+export function rewriteHtml(body, prefix, cookieNamespace) {
   let out = body;
   for (const attr of HTML_ATTRS) {
     // attr="/path" or attr='/path' - but not attr="//host" (protocol-relative).
@@ -39,7 +64,107 @@ export function rewriteHtml(body, prefix) {
   });
   // <meta http-equiv="refresh" content="5; url=/path">
   out = out.replace(/(content\s*=\s*)(["'])(\s*\d+\s*;\s*url\s*=\s*)(\/(?!\/)[^"']*)\2/gi, (_match, name, quote, head, path) => `${name}${quote}${head}${prefix}${path}${quote}`);
+  if (cookieNamespace != null) out = injectCookieNamespaceShim(out, requireCookieNamespace(cookieNamespace));
   return out;
+}
+
+/**
+ * Install the client-side half of the cookie namespace on a document.
+ *
+ * rewriteSetCookie namespaces cookies on the response and restoreCookieNamespace strips the
+ * namespace on the way in, but neither can see document.cookie: a served site's own script writes
+ * straight to the shared viewer origin, where its cookies collide with another instance's and its
+ * reads can see the viewer's own cookies (a session cookie is host-scoped, so a different port is
+ * not a boundary for them - see README). This closes that gap inside the page: the setter prefixes
+ * the name with the instance's namespace - the same one the proxy uses, so a client-set cookie is
+ * still restored to the site's server under its own name - and the getter returns only this
+ * instance's cookies with the prefix stripped, so another instance's cookies and the viewer's are
+ * invisible to site script.
+ *
+ * The function is serialised into the page with Function#toString (see cookieNamespaceShimSource),
+ * so it must not reference anything outside its own body.
+ *
+ * @returns {boolean} false when the document exposes no cookie accessor to wrap (not a browser, or
+ *   a document whose cookie property was already removed)
+ */
+export function installCookieNamespace(namespace, target = globalThis.document) {
+  if (typeof namespace !== 'string' || namespace === '' || !target) return false;
+  let holder = target;
+  let descriptor = null;
+  while (holder && !descriptor) {
+    descriptor = Object.getOwnPropertyDescriptor(holder, 'cookie');
+    holder = Object.getPrototypeOf(holder);
+  }
+  if (!descriptor || typeof descriptor.get !== 'function' || typeof descriptor.set !== 'function') return false;
+  const nativeGet = () => descriptor.get.call(target);
+  const nativeSet = (value) => descriptor.set.call(target, value);
+  Object.defineProperty(target, 'cookie', {
+    configurable: true,
+    enumerable: descriptor.enumerable,
+    get: () => nativeGet()
+      .split(';')
+      .map((part) => part.trim())
+      .filter((part) => part.startsWith(namespace))
+      .map((part) => part.slice(namespace.length))
+      .join('; '),
+    set: (value) => {
+      const text = String(value ?? '');
+      const equals = text.indexOf('=');
+      const name = (equals === -1 ? text : text.slice(0, equals)).trim();
+      if (!name) return;
+      nativeSet(equals === -1 ? `${namespace}${name}=` : `${namespace}${name}${text.slice(equals)}`);
+    },
+  });
+  return true;
+}
+
+/**
+ * The inline script text for one instance's namespace. Separate from its markup so the CSP hash
+ * below covers exactly the bytes the browser will hash.
+ */
+export function cookieNamespaceShimSource(namespace) {
+  return `(${installCookieNamespace.toString()})(${JSON.stringify(requireCookieNamespace(namespace))});`;
+}
+
+/**
+ * The shim as a CSP source expression. A policy the site delivered as a RESPONSE HEADER applies to
+ * the whole document and would block the injected script; naming its exact hash admits this script
+ * and nothing else (never 'unsafe-inline'). A policy the site wrote in a <meta> tag needs no
+ * allowance: the shim is parsed before that tag can install the policy.
+ */
+export function cookieNamespaceShimHash(namespace) {
+  return `'sha256-${createHash('sha256').update(cookieNamespaceShimSource(namespace)).digest('base64')}'`;
+}
+
+/**
+ * Put the shim at the top of the document's head, so it defines document.cookie before any of the
+ * page's own scripts run. A page with no <head> gets it at the start of the document instead, which
+ * the parser places in the head anyway - injecting at </head> would have missed that page entirely.
+ */
+function injectCookieNamespaceShim(html, namespace) {
+  const script = `<script data-viewer-cookie-namespace>${cookieNamespaceShimSource(namespace)}</script>`;
+  const head = html.match(/<head(\s[^>]*)?>/i);
+  if (!head) return `${script}${html}`;
+  const at = head.index + head[0].length;
+  return `${html.slice(0, at)}${script}${html.slice(at)}`;
+}
+
+/**
+ * Add a script hash to a Content-Security-Policy value, for the header case above. script-src-elem
+ * wins over script-src for a <script> element and default-src is the fallback when neither is
+ * written; a policy naming none of the three does not restrict script elements, so it is returned
+ * untouched. Idempotent, so a repeated call cannot grow the header.
+ */
+export function allowInlineScriptHash(policy, hash) {
+  if (typeof policy !== 'string' || typeof hash !== 'string') return policy;
+  const directives = policy.split(';').map((directive) => directive.trim()).filter(Boolean);
+  const index = ['script-src-elem', 'script-src', 'default-src']
+    .map((name) => directives.findIndex((directive) => directive.toLowerCase().split(/\s+/)[0] === name))
+    .find((found) => found !== -1);
+  if (index === undefined) return policy;
+  const [name, ...sources] = directives[index].split(/\s+/);
+  if (!sources.includes(hash)) directives[index] = [name, ...sources, hash].join(' ');
+  return `${directives.join('; ')};`;
 }
 
 export function rewriteCss(body, prefix) {

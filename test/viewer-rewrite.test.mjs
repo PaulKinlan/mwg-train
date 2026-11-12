@@ -1,8 +1,14 @@
 /** Unit tests for the in-flight rewriting that lets a root-written site live under a subpath. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { runInNewContext } from 'node:vm';
 
 import {
+  allowInlineScriptHash,
+  cookieNamespaceShimHash,
+  cookieNamespaceShimSource,
+  installCookieNamespace,
   rewriteCss,
   rewriteHtml,
   rewriteJs,
@@ -12,6 +18,39 @@ import {
 } from '../src/viewer/rewrite.mjs';
 
 const PREFIX = '/live/demo/original';
+const NS = '__vw_demo_original_';
+
+/** The inline script text a served page carries, so the shim can be executed rather than pattern-matched. */
+const injectedShim = (html) => {
+  const match = /<script data-viewer-cookie-namespace>([\s\S]*?)<\/script>/.exec(html);
+  assert.ok(match, 'the served page carries no document.cookie shim');
+  return match[1];
+};
+
+/**
+ * A document shaped like a browser's: the cookie accessor lives on the prototype, not on the
+ * instance, and the native setter parses "name=value; attributes" into a flat store the way a
+ * browser does. Every entry is a UTF-8 cookie header line, which is what the browser would send.
+ */
+function fakeDocument(initial = []) {
+  const store = [...initial];
+  const prototype = {
+    get cookie() {
+      return store.join('; ');
+    },
+    set cookie(value) {
+      const [pair] = String(value).split(';');
+      const equals = pair.indexOf('=');
+      const name = (equals === -1 ? pair : pair.slice(0, equals)).trim();
+      if (!name) return;
+      const entry = equals === -1 ? `${name}=` : `${name}=${pair.slice(equals + 1).trim()}`;
+      const existing = store.findIndex((line) => line.startsWith(`${name}=`));
+      if (existing === -1) store.push(entry);
+      else store[existing] = entry;
+    },
+  };
+  return { document: Object.create(prototype), store };
+}
 
 test('html: absolute-path attributes are prefixed', () => {
   const input = '<form action="/book"><link href="/app/styles.css"><img src="/img/logo.png"><a href="/next">x</a>';
@@ -81,4 +120,90 @@ test('cookie namespace round-trips: only namespaced cookies are restored for the
   assert.equal(restored, 'session=abc; theme=dark');
   assert.equal(restoreCookieNamespace('exe_auth=OWNER-SECRET', '__vw_demo_original_'), null);
   assert.equal(restoreCookieNamespace(undefined, '__vw_demo_original_'), null);
+});
+
+test('html: a served page carries the document.cookie shim before the page\'s own scripts', () => {
+  const page = '<!doctype html><html><head><link rel="stylesheet" href="/app/styles.css"><script src="/app.js"></script></head><body></body></html>';
+  const out = rewriteHtml(page, PREFIX, NS);
+  const shimAt = out.indexOf('data-viewer-cookie-namespace');
+  assert.ok(shimAt !== -1, 'the shim must be injected into served HTML');
+  assert.ok(shimAt < out.indexOf('<link rel="stylesheet"'), 'the shim must be the first thing the parser meets in the head');
+  assert.ok(out.includes(JSON.stringify(NS)), 'the shim must carry this instance\'s namespace');
+  // The URL rewriting the same pass performs is unaffected by the injection.
+  assert.match(out, /href="\/live\/demo\/original\/app\/styles\.css"/);
+});
+
+test('html: a page with no head still gets the shim, and no namespace means no shim', () => {
+  assert.ok(rewriteHtml('<p>no head</p>', PREFIX, NS).startsWith('<script data-viewer-cookie-namespace>'));
+  assert.equal(rewriteHtml('<p>no head</p>', PREFIX).includes('data-viewer-cookie-namespace'), false);
+});
+
+test('html: a namespace that is not a cookie-name token is refused rather than emitted', () => {
+  assert.throws(() => rewriteHtml('<head></head>', PREFIX, 'bad;namespace'), TypeError);
+  assert.throws(() => rewriteHtml('<head></head>', PREFIX, '__vw__</script>'), TypeError);
+});
+
+test('the injected shim prefixes writes and hides every foreign cookie from site script', () => {
+  const { document, store } = fakeDocument(['exe_auth=OWNER-SECRET', '__vw_other_original_theme=dark']);
+  runInNewContext(injectedShim(rewriteHtml('<html><head></head></html>', PREFIX, NS)), { document });
+
+  // A write reaches the browser's store namespaced, so it cannot collide with another instance's.
+  document.cookie = 'session=abc; Path=/; SameSite=Lax';
+  assert.deepEqual(store.slice(2), [`${NS}session=abc`]);
+
+  // A read returns this instance's cookies under their own names, and nothing else.
+  assert.equal(document.cookie, 'session=abc');
+
+  // A second instance's shim on the same origin sees only its own cookie too.
+  const other = fakeDocument([...store, `${NS}theme=light`]);
+  runInNewContext(injectedShim(rewriteHtml('<head></head>', PREFIX, '__vw_other_original_')), { document: other.document });
+  assert.equal(other.document.cookie, 'theme=dark');
+
+  // The round trip a request performs: what the browser sends back is what the site's own server
+  // sees, under the site's own cookie name.
+  assert.equal(restoreCookieNamespace(store.join('; '), NS), 'session=abc');
+});
+
+test('the injected shim keeps cookie attributes and handles a bare name', () => {
+  const { document, store } = fakeDocument();
+  runInNewContext(injectedShim(rewriteHtml('<head></head>', PREFIX, NS)), { document });
+  document.cookie = 'flag';
+  document.cookie = 'session=second';
+  assert.deepEqual(store, [`${NS}flag=`, `${NS}session=second`]);
+  assert.equal(document.cookie, 'flag=; session=second');
+});
+
+test('installCookieNamespace reports a document with no cookie accessor instead of throwing', () => {
+  assert.equal(installCookieNamespace(NS, {}), false);
+  assert.equal(installCookieNamespace(NS, null), false);
+  assert.equal(installCookieNamespace('', {}), false);
+});
+
+test('the CSP hash covers the exact injected script text', () => {
+  const hash = cookieNamespaceShimHash(NS);
+  const expected = `'sha256-${createHash('sha256').update(cookieNamespaceShimSource(NS)).digest('base64')}'`;
+  assert.equal(hash, expected);
+  assert.match(hash, /^'sha256-[A-Za-z0-9+/]{43}='$/);
+  assert.ok(cookieNamespaceShimSource(NS).includes(JSON.stringify(NS)));
+});
+
+test('a response-header CSP admits the shim by hash, never by unsafe-inline', () => {
+  const hash = cookieNamespaceShimHash(NS);
+  assert.equal(
+    allowInlineScriptHash("default-src 'none'; script-src 'self'; img-src 'self'", hash),
+    `default-src 'none'; script-src 'self' ${hash}; img-src 'self';`,
+  );
+  // No script-src: the hash goes on default-src, which is what governs script elements then.
+  assert.equal(allowInlineScriptHash("default-src 'self'", hash), `default-src 'self' ${hash};`);
+  // script-src-elem overrides script-src for a <script> element.
+  assert.equal(
+    allowInlineScriptHash("script-src 'none'; script-src-elem 'self'", hash),
+    `script-src 'none'; script-src-elem 'self' ${hash};`,
+  );
+  // A policy that does not restrict script elements is left exactly as the site wrote it.
+  assert.equal(allowInlineScriptHash("img-src 'self'", hash), "img-src 'self'");
+  assert.equal(allowInlineScriptHash(undefined, hash), undefined);
+  // Idempotent: a repeated pass cannot grow the header.
+  const once = allowInlineScriptHash("script-src 'self'", hash);
+  assert.equal(allowInlineScriptHash(once, hash), once);
 });

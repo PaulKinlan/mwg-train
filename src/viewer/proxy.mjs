@@ -24,7 +24,16 @@
  *    413 rather than buffered, so an oversized payload costs this process a header comparison, not
  *    its heap.
  */
-import { rewriteCss, rewriteHtml, rewriteJs, rewriteLocation, rewriteSetCookie, restoreCookieNamespace } from './rewrite.mjs';
+import {
+  allowInlineScriptHash,
+  cookieNamespaceShimHash,
+  rewriteCss,
+  rewriteHtml,
+  rewriteJs,
+  rewriteLocation,
+  rewriteSetCookie,
+  restoreCookieNamespace,
+} from './rewrite.mjs';
 
 /** Request headers a demo site may legitimately need. Everything else is dropped. */
 const REQUEST_ALLOWLIST = new Set([
@@ -183,6 +192,14 @@ export async function proxyRequest({ request, response, sandbox, prefix, sitePat
     return;
   }
 
+  const upstreamBody = Buffer.from(upstream.bodyBase64 ?? '', 'base64');
+  const contentType = String(upstream.headers['content-type'] ?? '');
+  const rewriter = REWRITE_BODY_TYPES.find(([pattern]) => pattern.test(contentType))?.[1] ?? null;
+  // Only the HTML rewriter injects the document.cookie shim, and only a policy the site sends as a
+  // response header can block an inline script placed before the page's own tags: adding the shim's
+  // own hash to that header is what keeps the page's policy in force while the shim still runs.
+  const shimHash = rewriter === rewriteHtml && cookieNamespace != null ? cookieNamespaceShimHash(cookieNamespace) : null;
+
   const responseHeaders = {};
   for (const [name, value] of Object.entries(upstream.headers)) {
     const lower = name.toLowerCase();
@@ -196,16 +213,20 @@ export async function proxyRequest({ request, response, sandbox, prefix, sitePat
       responseHeaders['set-cookie'] = values.map((header) => rewriteSetCookie(header, prefix, cookieNamespace));
       continue;
     }
+    if (lower === 'content-security-policy' && shimHash) {
+      const policies = Array.isArray(value) ? value : [value];
+      const rewritten = policies.map((policy) => allowInlineScriptHash(policy, shimHash));
+      responseHeaders[lower] = Array.isArray(value) ? rewritten : rewritten[0];
+      continue;
+    }
     responseHeaders[lower] = value;
   }
 
-  const upstreamBody = Buffer.from(upstream.bodyBase64 ?? '', 'base64');
-  const contentType = String(upstream.headers['content-type'] ?? '');
-  const rewriter = REWRITE_BODY_TYPES.find(([pattern]) => pattern.test(contentType))?.[1] ?? null;
   response.writeHead(upstream.status, responseHeaders);
   if (!rewriter) {
     response.end(upstreamBody);
     return;
   }
-  response.end(rewriter(upstreamBody.toString('utf8'), prefix));
+  // rewriteCss and rewriteJs ignore the third argument: only the HTML rewrite has a client-side half.
+  response.end(rewriter(upstreamBody.toString('utf8'), prefix, cookieNamespace));
 }

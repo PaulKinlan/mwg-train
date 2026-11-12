@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { Readable, PassThrough } from 'node:stream';
 
 import { outboundHeaders, assertNoAuthHeaders, proxyRequest, ForbiddenHeaderError, MAX_PROXY_BODY_BYTES } from '../src/viewer/proxy.mjs';
+import { cookieNamespaceShimHash } from '../src/viewer/rewrite.mjs';
 import { Sandbox } from '../src/viewer/sandbox.mjs';
 
 const FIXTURE = new URL('../test-fixtures/sites/echo', import.meta.url).pathname;
@@ -203,14 +204,22 @@ function streamingRequest({ method = 'POST', headers = {}, chunkSize, maxChunks 
   return stream;
 }
 
-/** A sandbox stand-in that records what the proxy handed it and answers 200 'forwarded'. */
-function stubSandbox() {
+/**
+ * A sandbox stand-in that records what the proxy handed it and answers 200 'forwarded'. `answer`
+ * overrides the upstream response, for tests about what the proxy does with a given body and header.
+ */
+function stubSandbox(answer = {}) {
   const calls = [];
   return {
     calls,
     request: async (args) => {
       calls.push(args);
-      return { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' }, bodyBase64: Buffer.from('forwarded').toString('base64') };
+      return {
+        status: 200,
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+        bodyBase64: Buffer.from('forwarded').toString('base64'),
+        ...answer,
+      };
     },
   };
 }
@@ -272,4 +281,32 @@ test('a body of exactly the cap is forwarded, not refused', async () => {
   const result = await response.done;
   assert.equal(result.statusCode, 200);
   assert.equal(sandbox.calls[0].body.length, MAX_PROXY_BODY_BYTES);
+});
+
+test('served HTML carries the document.cookie shim, and a CSP response header admits it by hash', async () => {
+  const html = '<!doctype html><html><head><link rel="stylesheet" href="/app/styles.css"></head><body></body></html>';
+  const sandbox = stubSandbox({
+    headers: { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': "default-src 'none'; script-src 'self'" },
+    bodyBase64: Buffer.from(html).toString('base64'),
+  });
+  const response = fakeResponse();
+  await proxyRequest({ request: fakeRequest({ headers: {} }), response, sandbox, prefix: PREFIX, sitePath: '/', cookieNamespace: NS });
+  const result = await response.done;
+
+  const shimAt = result.body.indexOf('data-viewer-cookie-namespace');
+  assert.ok(shimAt !== -1, 'a served page must carry the document.cookie shim');
+  assert.ok(shimAt < result.body.indexOf('<link rel="stylesheet"'), 'the shim must run before the page\'s own resources');
+  assert.ok(result.body.includes(JSON.stringify(NS)), 'the shim must carry this instance\'s namespace');
+  // The policy the site sent is still in force; only this one script is admitted, by its exact hash.
+  assert.equal(
+    result.headers['content-security-policy'],
+    `default-src 'none'; script-src 'self' ${cookieNamespaceShimHash(NS)};`,
+  );
+  // A non-HTML body is not injected, and its policy is left exactly as the site wrote it.
+  const plain = fakeResponse();
+  const plainSandbox = stubSandbox({ headers: { 'content-type': 'text/plain; charset=utf-8', 'content-security-policy': "default-src 'none'" } });
+  await proxyRequest({ request: fakeRequest({ headers: {} }), response: plain, sandbox: plainSandbox, prefix: PREFIX, sitePath: '/x', cookieNamespace: NS });
+  const plainResult = await plain.done;
+  assert.equal(plainResult.body, 'forwarded');
+  assert.equal(plainResult.headers['content-security-policy'], "default-src 'none'");
 });
