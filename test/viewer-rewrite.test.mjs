@@ -140,6 +140,23 @@ test('html: a page with no head still gets the shim, and no namespace means no s
   assert.equal(rewriteHtml('<p>no head</p>', PREFIX).includes('data-viewer-cookie-namespace'), false);
 });
 
+test('html: a doctype page with no head keeps the doctype first and the shim ahead of its scripts', () => {
+  const page = '<!doctype html><title>Booking</title><script src="/app.js"></script><p>hello</p>';
+  const out = rewriteHtml(page, PREFIX, NS);
+  // A byte before the doctype is what drops the browser into quirks mode, so the served copy would
+  // lay out differently from the site at its own root.
+  assert.ok(out.startsWith('<!doctype html>'), `the doctype must stay the document's first token, got ${JSON.stringify(out.slice(0, 40))}`);
+  const shimAt = out.indexOf('<script data-viewer-cookie-namespace>');
+  assert.equal(shimAt, '<!doctype html>'.length, 'the shim goes straight after the doctype, never in front of it');
+  assert.ok(shimAt < out.indexOf('<script src='), 'the shim still runs before the page\'s own scripts');
+});
+
+test('html: a page with <html> but no doctype gets the shim just inside <html>', () => {
+  const out = rewriteHtml('<html lang="en"><p>no head</p></html>', PREFIX, NS);
+  assert.ok(out.startsWith('<html lang="en"><script data-viewer-cookie-namespace>'), 'the shim must not be placed before <html>');
+  assert.ok(out.endsWith('</html>'));
+});
+
 test('html: a namespace that is not a cookie-name token is refused rather than emitted', () => {
   assert.throws(() => rewriteHtml('<head></head>', PREFIX, 'bad;namespace'), TypeError);
   assert.throws(() => rewriteHtml('<head></head>', PREFIX, '__vw__</script>'), TypeError);

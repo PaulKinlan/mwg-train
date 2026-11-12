@@ -150,14 +150,17 @@ export function cookieNamespaceShimHash(namespace) {
 
 /**
  * Put the shim at the top of the document's head, so it defines document.cookie before any of the
- * page's own scripts run. A page with no <head> gets it at the start of the document instead, which
- * the parser places in the head anyway - injecting at </head> would have missed that page entirely.
+ * page's own scripts run. A page with no <head> gets it straight after the doctype (or after <html>
+ * when the page omits a doctype), which the parser places in the head anyway - injecting at </head>
+ * would have missed that page entirely. It is never put in front of the document: a byte before the
+ * <!doctype> drops the page into quirks mode, where the served copy would lay out differently from
+ * the site at its own root.
  */
 function injectCookieNamespaceShim(html, namespace) {
   const script = `<script data-viewer-cookie-namespace>${cookieNamespaceShimSource(namespace)}</script>`;
-  const head = html.match(/<head(\s[^>]*)?>/i);
-  if (!head) return `${script}${html}`;
-  const at = head.index + head[0].length;
+  const anchor = html.match(/<head(\s[^>]*)?>/i) ?? html.match(/<!doctype[^>]*>|<html(\s[^>]*)?>/i);
+  if (!anchor) return `${script}${html}`;
+  const at = anchor.index + anchor[0].length;
   return `${html.slice(0, at)}${script}${html.slice(at)}`;
 }
 
