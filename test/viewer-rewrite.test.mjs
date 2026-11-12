@@ -49,7 +49,9 @@ function fakeDocument(initial = []) {
       else store[existing] = entry;
     },
   };
-  return { document: Object.create(prototype), store };
+  // `prototype` is exposed because that is where the native accessor lives: a test that reaches for
+  // the descriptor there is asking the same question site script would ask.
+  return { document: Object.create(prototype), store, prototype };
 }
 
 test('html: absolute-path attributes are prefixed', () => {
@@ -179,6 +181,27 @@ test('installCookieNamespace reports a document with no cookie accessor instead 
   assert.equal(installCookieNamespace('', {}), false);
 });
 
+test('the prototype accessor cannot be called directly to bypass the namespace', () => {
+  const { document, store, prototype } = fakeDocument(['exe_auth=OWNER-SECRET', '__vw_other_original_theme=dark', `${NS}session=abc`]);
+  runInNewContext(injectedShim(rewriteHtml('<html><head></head></html>', PREFIX, NS)), { document });
+
+  // The wrapper replaces the accessor where it lives, so the document itself owns no cookie
+  // property and there is no deeper descriptor left for site script to call instead.
+  assert.equal(Object.getOwnPropertyDescriptor(document, 'cookie'), undefined);
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'cookie');
+  assert.equal(typeof descriptor.get, 'function');
+  assert.equal(typeof descriptor.set, 'function');
+
+  // get.call(document) is the exact bypass: it invokes the accessor the prototype exposes. It now
+  // reads through the namespace, so the owner's cookie and another instance's stay hidden.
+  assert.equal(descriptor.get.call(document), 'session=abc');
+
+  // The same for the setter: a write through it is namespaced, not written to the shared origin.
+  descriptor.set.call(document, 'injected=1; Path=/');
+  assert.deepEqual(store, ['exe_auth=OWNER-SECRET', '__vw_other_original_theme=dark', `${NS}session=abc`, `${NS}injected=1`]);
+  assert.equal(document.cookie, 'session=abc; injected=1');
+});
+
 test('the CSP hash covers the exact injected script text', () => {
   const hash = cookieNamespaceShimHash(NS);
   const expected = `'sha256-${createHash('sha256').update(cookieNamespaceShimSource(NS)).digest('base64')}'`;
@@ -205,5 +228,27 @@ test('a response-header CSP admits the shim by hash, never by unsafe-inline', ()
   assert.equal(allowInlineScriptHash(undefined, hash), undefined);
   // Idempotent: a repeated pass cannot grow the header.
   const once = allowInlineScriptHash("script-src 'self'", hash);
+  assert.equal(allowInlineScriptHash(once, hash), once);
+});
+
+test('every policy in a comma-joined CSP value receives the hash', () => {
+  const hash = cookieNamespaceShimHash(NS);
+  // Two Content-Security-Policy headers arrive from HTTP as one comma-joined value; the second
+  // policy's "script-src 'none'" still applies, so a hash on only the first would still block the
+  // shim. Each policy is rewritten on its own.
+  assert.equal(
+    allowInlineScriptHash("script-src 'none', script-src 'none'", hash),
+    `script-src 'none' ${hash};, script-src 'none' ${hash};`,
+  );
+  // Mixed shapes: a default-src fallback policy next to one that names script-src, and a policy
+  // that does not restrict script elements at all is left exactly as the site wrote it.
+  assert.equal(
+    allowInlineScriptHash("default-src 'self', script-src 'self' 'nonce-abc', img-src 'self'", hash),
+    `default-src 'self' ${hash};, script-src 'self' 'nonce-abc' ${hash};, img-src 'self'`,
+  );
+  // Nothing to admit: no policy names a script directive, so the value is returned unchanged.
+  assert.equal(allowInlineScriptHash("img-src 'self', img-src 'none'", hash), "img-src 'self', img-src 'none'");
+  // Idempotent across policies: a repeated pass adds nothing.
+  const once = allowInlineScriptHash("script-src 'none', script-src 'none'", hash);
   assert.equal(allowInlineScriptHash(once, hash), once);
 });

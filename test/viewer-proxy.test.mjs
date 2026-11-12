@@ -310,3 +310,24 @@ test('served HTML carries the document.cookie shim, and a CSP response header ad
   assert.equal(plainResult.body, 'forwarded');
   assert.equal(plainResult.headers['content-security-policy'], "default-src 'none'");
 });
+
+test('every Content-Security-Policy the site sends admits the shim, repeated or comma-joined', async () => {
+  const html = '<!doctype html><html><head></head><body></body></html>';
+  const hash = cookieNamespaceShimHash(NS);
+  // A header the site sends twice reaches the proxy as an array; an element of it may itself hold
+  // several policies joined by commas. All of them are enforced, so all of them get the hash.
+  const sandbox = stubSandbox({
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'content-security-policy': ["script-src 'none'", "script-src 'self', default-src 'none'"],
+    },
+    bodyBase64: Buffer.from(html).toString('base64'),
+  });
+  const response = fakeResponse();
+  await proxyRequest({ request: fakeRequest({ headers: {} }), response, sandbox, prefix: PREFIX, sitePath: '/', cookieNamespace: NS });
+  const result = await response.done;
+  assert.deepEqual(result.headers['content-security-policy'], [
+    `script-src 'none' ${hash};`,
+    `script-src 'self' ${hash};, default-src 'none' ${hash};`,
+  ]);
+});

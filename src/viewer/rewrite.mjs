@@ -89,32 +89,44 @@ export function rewriteHtml(body, prefix, cookieNamespace) {
  */
 export function installCookieNamespace(namespace, target = globalThis.document) {
   if (typeof namespace !== 'string' || namespace === '' || !target) return false;
+  // The accessor belongs to Document.prototype, not to the document instance, so the wrapper
+  // replaces it in whichever object owns it. An own property on the instance would leave the
+  // native accessor one prototype step away, and site script can reach it there:
+  // Object.getOwnPropertyDescriptor(Document.prototype, 'cookie').get.call(document) reads (and its
+  // setter writes) straight past the namespace. Wrapping the owner covers both spellings, because
+  // the descriptor site script finds now is this one.
   let holder = target;
   let descriptor = null;
   while (holder && !descriptor) {
     descriptor = Object.getOwnPropertyDescriptor(holder, 'cookie');
-    holder = Object.getPrototypeOf(holder);
+    if (!descriptor) holder = Object.getPrototypeOf(holder);
   }
   if (!descriptor || typeof descriptor.get !== 'function' || typeof descriptor.set !== 'function') return false;
   const nativeGet = () => descriptor.get.call(target);
   const nativeSet = (value) => descriptor.set.call(target, value);
-  Object.defineProperty(target, 'cookie', {
-    configurable: true,
-    enumerable: descriptor.enumerable,
-    get: () => nativeGet()
-      .split(';')
-      .map((part) => part.trim())
-      .filter((part) => part.startsWith(namespace))
-      .map((part) => part.slice(namespace.length))
-      .join('; '),
-    set: (value) => {
-      const text = String(value ?? '');
-      const equals = text.indexOf('=');
-      const name = (equals === -1 ? text : text.slice(0, equals)).trim();
-      if (!name) return;
-      nativeSet(equals === -1 ? `${namespace}${name}=` : `${namespace}${name}${text.slice(equals)}`);
-    },
-  });
+  try {
+    Object.defineProperty(holder, 'cookie', {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get: () => nativeGet()
+        .split(';')
+        .map((part) => part.trim())
+        .filter((part) => part.startsWith(namespace))
+        .map((part) => part.slice(namespace.length))
+        .join('; '),
+      set: (value) => {
+        const text = String(value ?? '');
+        const equals = text.indexOf('=');
+        const name = (equals === -1 ? text : text.slice(0, equals)).trim();
+        if (!name) return;
+        nativeSet(equals === -1 ? `${namespace}${name}=` : `${namespace}${name}${text.slice(equals)}`);
+      },
+    });
+  } catch {
+    // A document whose accessor cannot be replaced (a frozen prototype) is left as it was rather
+    // than half-wrapped; the caller learns from the result that the shim did not install.
+    return false;
+  }
   return true;
 }
 
@@ -150,13 +162,34 @@ function injectCookieNamespaceShim(html, namespace) {
 }
 
 /**
- * Add a script hash to a Content-Security-Policy value, for the header case above. script-src-elem
- * wins over script-src for a <script> element and default-src is the fallback when neither is
- * written; a policy naming none of the three does not restrict script elements, so it is returned
- * untouched. Idempotent, so a repeated call cannot grow the header.
+ * Add a script hash to a Content-Security-Policy value, for the header case above.
+ *
+ * One header value can carry several policies: the site may send Content-Security-Policy more than
+ * once, and HTTP flattens repeated headers into one comma-separated value (which is what
+ * Headers#forEach hands back). Each of those policies is enforced independently, so a hash added to
+ * only one of them is still blocked by another policy's "script-src 'none'" - every policy has to
+ * name the hash. Commas separate policies in CSP's own grammar, so splitting on a comma is the same
+ * reading a browser gives the header.
+ *
+ * Within a policy: script-src-elem wins over script-src for a <script> element and default-src is
+ * the fallback when neither is written; a policy naming none of the three does not restrict script
+ * elements, so it is returned untouched. Idempotent, so a repeated call cannot grow the header.
  */
-export function allowInlineScriptHash(policy, hash) {
-  if (typeof policy !== 'string' || typeof hash !== 'string') return policy;
+export function allowInlineScriptHash(value, hash) {
+  if (typeof value !== 'string' || typeof hash !== 'string') return value;
+  let changed = false;
+  const policies = value.split(',').map((part) => {
+    const policy = part.trim();
+    const rewritten = addScriptHashToPolicy(policy, hash);
+    if (rewritten !== policy) changed = true;
+    return rewritten;
+  });
+  // Untouched when no policy needed the hash, so a value the site wrote keeps its exact spelling.
+  return changed ? policies.join(', ') : value;
+}
+
+/** One policy out of a Content-Security-Policy value; see allowInlineScriptHash for the multi-policy case. */
+function addScriptHashToPolicy(policy, hash) {
   const directives = policy.split(';').map((directive) => directive.trim()).filter(Boolean);
   const index = ['script-src-elem', 'script-src', 'default-src']
     .map((name) => directives.findIndex((directive) => directive.toLowerCase().split(/\s+/)[0] === name))
