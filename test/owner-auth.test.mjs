@@ -270,6 +270,51 @@ test('the --corpus gate scans a clean TRAINING corpus project and passes it', ()
   rmSync(root, { recursive: true, force: true });
 });
 
+test('the --corpus gate fails on owner material in the scored training records (mwg-train-rncc)', () => {
+  // The scored training decision records are served by the viewer: the project page renders their
+  // detail, improved rules and uplifted sha. Scanning only TRAINING_CORPUS.json left this file out of
+  // the --corpus gate, so a scored run's owner-identifying detail was displayed and never read here.
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  writeJson(join(root, 'docs', 'train', 'corpus', 'records.json'), {
+    projects: [{ project_id: 'tr-99-raw', decision: { accepted: true, detail: ['scored in a browser run for paulkinlan'] } }],
+  });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /FAIL scored training records \(.*records\.json\)/);
+  assert.match(run.stdout, /records\.json:\d+ - owner-identifier/);
+  assert.equal(run.stdout.includes('paulkinlan'), false, 'the finding must not print the matched text');
+  assert.match(run.stdout, /owner-auth scan: 3 tree\(s\), 1 failed/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('the --corpus gate scans clean scored training records and passes them', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  writeJson(join(root, 'docs', 'train', 'corpus', 'records.json'), {
+    projects: [{ project_id: 'tr-99-raw', decision: { accepted: true, category: 'accept', detail: ['scored in a browser run'] } }],
+  });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /PASS scored training records \(.*records\.json\)/);
+  assert.match(run.stdout, /owner-auth scan: 3 tree\(s\), 0 failed/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test('the --corpus gate says out loud when there are no scored training records to scan', () => {
+  // Absent records are an unscored corpus, not a pass by omission: the gate names the path it would
+  // have scanned so a corpus whose records moved is visible in the output rather than silently clean.
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', { 'index.html': '<html><body>hello</body></html>' });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /NO-SCORED-RECORDS .*docs\/train\/corpus\/records\.json/);
+  rmSync(root, { recursive: true, force: true });
+});
+
 test('an unscored training original is re-derived from the briefs and hash-verified before scanning', () => {
   // No kept tree: the gate must scaffold the project from docs/train/briefs and refuse to scan it
   // unless the regenerated tree hashes to the sha the training manifest recorded.

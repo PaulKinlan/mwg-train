@@ -47,6 +47,17 @@ export function listRuns(corpusRoot) {
 export class TrainingCorpusError extends Error {}
 
 /**
+ * The scored training decision records: the browser-run decisions (accepted, category, detail,
+ * improved rules, uplifted sha) for the tr-* projects, committed under docs/train/corpus beside
+ * the training briefs. The corpus root is normally <repo>/pilot, so this sits beside it rather
+ * than inside it. Exported because the file is SERVED (the project page renders its detail and
+ * rules), so the owner-auth gate has to scan the same file the viewer loads.
+ */
+export function trainingRecordsPath(corpusRoot) {
+  return join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json');
+}
+
+/**
  * Bind the training corpus projects to project records.
  *
  * The training manifest is the record of record for a training project, and it says nothing about
@@ -105,7 +116,7 @@ export function loadTrainingProjects(corpusRoot, { strict = false, knownKeys = n
       firstKeyOf.set(key, index);
     }
   }
-  const trainingRecords = readJson(join(dirname(corpusRoot), 'docs', 'train', 'corpus', 'records.json'));
+  const trainingRecords = readJson(trainingRecordsPath(corpusRoot));
   const projects = [];
   const scoredTrainingByKey = new Map();
   const scoredTrainingById = new Map();
