@@ -18,7 +18,10 @@
  *          5 GONE (payload: reason)    wrapper -> viewer, the site process exited
  *
  * Request and response bodies travel whole (the sites are small; the viewer buffers anyway), with
- * a hard cap so a runaway site cannot flood the viewer.
+ * a hard cap so a runaway site cannot flood the viewer. The response cap is enforced while the body
+ * is being read - a declared length over the cap is refused before the body is pulled at all, and a
+ * chunked or decompressed body is counted as it arrives - so an oversized response is refused
+ * instead of first occupying the memory it would have to be thrown away from.
  */
 
 import { existsSync } from 'node:fs';
@@ -43,6 +46,52 @@ function writeFrame(type, id, payload) {
 }
 
 const log = (line) => writeFrame(T_LOG, 0, Buffer.from(String(line), 'utf8'));
+
+/**
+ * The length the response declares, or null when it declares none this process can trust.
+ *
+ * A declared length is only a fast path: fetch decodes `content-encoding` after the header is
+ * read, so a gzip response's content-length describes the compressed bytes, and a chunked one has
+ * no length at all. The counter in readCappedBody is what actually enforces the cap.
+ */
+function declaredResponseLength(response) {
+  const raw = response.headers.get('content-length');
+  if (raw === null) return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+async function cancelResponseBody(response) {
+  if (response.body === null) return;
+  await response.body.cancel().catch(() => {});
+}
+
+/**
+ * Reads the response body, refusing it as soon as the bytes seen exceed the cap (null is
+ * "refused"). Cancelling the reader is the point, not an optimisation: the site's socket is
+ * released at the cap, so the rest of an oversized body is never produced, let alone held.
+ */
+async function readCappedBody(response) {
+  if (response.body === null) return Buffer.alloc(0);
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total);
+      total += value.byteLength;
+      if (total > CAP_BYTES) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(value);
+    }
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    throw error;
+  }
+}
 
 async function main() {
   const arg = (name, fallback) => {
@@ -125,8 +174,13 @@ async function main() {
         body: ['GET', 'HEAD'].includes(message.method) ? undefined : body,
         redirect: 'manual',
       });
-      const responseBody = Buffer.from(await response.arrayBuffer());
-      if (responseBody.length > CAP_BYTES) return send(id, 502, { 'content-type': 'text/plain' }, 'response too large');
+      const declared = declaredResponseLength(response);
+      if (declared !== null && declared > CAP_BYTES) {
+        await cancelResponseBody(response);
+        return send(id, 502, { 'content-type': 'text/plain' }, 'response too large');
+      }
+      const responseBody = await readCappedBody(response);
+      if (responseBody === null) return send(id, 502, { 'content-type': 'text/plain' }, 'response too large');
       const responseHeaders = {};
       response.headers.forEach((value, name) => {
         // set-cookie is handled via getSetCookie below: Headers.forEach would fold multiple

@@ -8,7 +8,11 @@ const ROOT = resolve(import.meta.dirname, '..');
 // 2026-10-20 (mwg-train-601b): scripts/generate-archetype-light-dark.mjs also routes to
 // test/interactive-product-configurator-prompts.test.mjs, which now asserts the pinned step-name labels on the
 // interactive-product-configurator override prose that regenerates the served Light set and its Dark twins.
-const EXPECTED_EDGES_SHA256 = '9e3c451f6e7b53c1dff6042284e6913393b6a7b25003252c7e33589ade373c01';
+// 2026-11-13 (mwg-train-frd9): the sandbox bridge's response cap has a regression suite of its own.
+// bridge-wrapper.mjs is launched by path rather than imported, so the dependency graph has no edge
+// to follow for either consumer of this contract, and the fixture site that produces the oversized
+// bodies is not a module at all; both are declared here so a change to either reruns the suite.
+const EXPECTED_EDGES_SHA256 = '0510b5af8a9818f48a8ee41882d7d8d0a4cdf92ba8e062ccd0246055ff6a567b';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -101,6 +105,14 @@ test('the tr-01 live verifier routes to both transport decision and CLI regressi
   assert.deepEqual(mapping['scripts/verify-tr01-live-slice.mjs'], [
     'test/live-slice-verdict.test.mjs', 'test/tr01-live-slice-cli.test.mjs',
   ]);
+});
+
+test('the sandbox bridge and its oversized-body fixture route to the response-cap regression', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  for (const file of ['src/viewer/bridge-wrapper.mjs', 'test-fixtures/sites/response-cap/server.mjs']) {
+    assert.deepEqual(mapping[file], ['test/bridge-wrapper.test.mjs'],
+      `${file} must rerun the response-size cap regression when edited`);
+  }
 });
 
 test('documents with content assertions route to their citing suites', () => {
