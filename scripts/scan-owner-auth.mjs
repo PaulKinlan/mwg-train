@@ -23,6 +23,13 @@
  * missing, unreadable, empty, or malformed TRAINING_CORPUS.json is a fail-closed error rather than
  * an empty training corpus that scans nothing and passes.
  *
+ * The scored training decision RECORDS are scanned too (mwg-train-rncc): the browser-run decisions in
+ * docs/train/corpus/records.json are served by the viewer - its detail, improved rules and uplifted
+ * sha are rendered on the training project pages - so they are corpus records under the same rule.
+ * The path is resolved by the viewer's own loader (trainingRecordsPath), so the gate scans the file
+ * the viewer actually reads, not a second guess at where it lives. Scanning only the manifest left a
+ * scored run's owner-identifying detail displayed and never read by this gate.
+ *
  * Exit code 0 only if every scanned tree is clean. A file the scan cannot read (oversized or
  * binary) is a scan error, not a skip: the tree fails.
  */
@@ -32,7 +39,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import process from 'node:process';
 
-import { listRuns, loadCorpus, loadTrainingProjects } from '../src/viewer/corpus.mjs';
+import { listRuns, loadCorpus, loadTrainingProjects, trainingRecordsPath } from '../src/viewer/corpus.mjs';
 import { scanTree, scanPairRecords, loadScanConfig, buildMatchers } from '../src/viewer/owner-auth.mjs';
 import { hashTree } from '../src/corpus/tree-hash.mjs';
 
@@ -207,6 +214,16 @@ async function main() {
       if (work.length === 0) {
         console.error('ERROR (fail-closed): no projects found - nothing to accept');
         return 3;
+      }
+      // The scored training decision records are served by the viewer (see the header), so they are
+      // corpus records and are scanned once per invocation. Absent is said out loud rather than
+      // passed over in silence: an unscored corpus serves no scored decision, but a gate that simply
+      // skipped the file could not tell that apart from a record it failed to find.
+      const scoredRecordsPath = trainingRecordsPath(args.corpus);
+      if (existsSync(scoredRecordsPath)) {
+        scanOne(`scored training records (${scoredRecordsPath})`, scoredRecordsPath);
+      } else {
+        console.log(`NO-SCORED-RECORDS ${scoredRecordsPath} - no scored training decision records exist; no scored record is served`);
       }
       for (const { project, training } of work) {
         // The eval gate is over ACCEPTED pairs (Paul's rule): a project with no accepted decision has
