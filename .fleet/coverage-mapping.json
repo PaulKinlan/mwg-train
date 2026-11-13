@@ -536,5 +536,11 @@
   "src/viewer/tuning.mjs": [
     "test/viewer-tuning.test.mjs",
     "test/viewer-tuning-generate.test.mjs"
+  ],
+  "src/viewer/bridge-wrapper.mjs": [
+    "test/bridge-wrapper.test.mjs"
+  ],
+  "test-fixtures/sites/response-cap/server.mjs": [
+    "test/bridge-wrapper.test.mjs"
   ]
 }
