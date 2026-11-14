@@ -272,6 +272,9 @@
   "docs/eval/evaluable-primary-endpoint.md": [
     "test/evaluable-primary-endpoint.test.mjs"
   ],
+  "docs/eval/owner-identity.json": [
+    "test/owner-auth.test.mjs"
+  ],
   "docs/train/memory-containment.md": [
     "test/generated-server-memory.test.mjs",
     "test/viewer-sandbox-memory.test.mjs"

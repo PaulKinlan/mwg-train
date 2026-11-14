@@ -12,7 +12,10 @@ const ROOT = resolve(import.meta.dirname, '..');
 // bridge-wrapper.mjs is launched by path rather than imported, so the dependency graph has no edge
 // to follow for either consumer of this contract, and the fixture site that produces the oversized
 // bodies is not a module at all; both are declared here so a change to either reruns the suite.
-const EXPECTED_EDGES_SHA256 = '0510b5af8a9818f48a8ee41882d7d8d0a4cdf92ba8e062ccd0246055ff6a567b';
+// 2026-11-14 (mwg-train-u2hn): the owner-auth denylist config routes to the scan suite that reads it.
+// docs/eval/owner-identity.json is data, not an import, so a denylist edit was an unmapped changed
+// file: the gate failed closed on it instead of rerunning the detection regressions.
+const EXPECTED_EDGES_SHA256 = '97785f48cc7d26d6e6de2851a400cb1dd6f9a228e0626e159d92fb5ef5671ef7';
 
 test('the fast-gate coverage contract cannot silently lose any declared suite edge', () => {
   const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
@@ -140,4 +143,10 @@ test('documents with content assertions route to their citing suites', () => {
   }
   assert.deepEqual(mapping['docs/PIPELINE.md'], ['test/pipeline-docs.test.mjs'],
     'PIPELINE.md must not route to reachability, which does not read it');
+});
+
+test('the owner-auth denylist config routes to the scan suite that reads it (mwg-train-u2hn)', () => {
+  const mapping = JSON.parse(readFileSync(resolve(ROOT, '.fleet/coverage-mapping.json'), 'utf8'));
+  assert.deepEqual(mapping['docs/eval/owner-identity.json'], ['test/owner-auth.test.mjs'],
+    'a denylist edit must rerun the detection regressions, not land unmapped');
 });

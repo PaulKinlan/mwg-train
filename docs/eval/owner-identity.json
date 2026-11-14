@@ -24,7 +24,8 @@
     "HF_TOKEN",
     "HUGGING_FACE_HUB_TOKEN",
     "AWS_SECRET_ACCESS_KEY",
-    "AWS_SESSION_TOKEN"
+    "AWS_SESSION_TOKEN",
+    "MWG_VIEWER_TOKEN"
   ],
   "proxy_header_names": [
     "x-auth-request-user",
@@ -34,7 +35,8 @@
     "x-forwarded-email",
     "x-exe-user",
     "x-exe-auth",
-    "x-viewer-auth"
+    "x-viewer-auth",
+    "mwg_viewer"
   ],
   "proxy_endpoints": [
     "127.0.0.1:9999",
