@@ -17,7 +17,7 @@
  * itself be a secret value.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 export class ScanConfigError extends Error {}
@@ -93,15 +93,28 @@ function looksBinary(buffer) {
   return probe.includes(0);
 }
 
+/**
+ * Walk every file under `root`, including files that live under a directory reached through a
+ * symlink (mwg-train-yvop): `isDirectory()` is false for a symlink, so testing the dirent alone
+ * skipped a linked subtree and left its bytes unscanned - a place a leak could hide from a gate that
+ * reports clean. `statSync` follows the link instead, and the set of real paths walked keeps a
+ * cyclic link (a linked parent, two names for one directory) from looping or double-scanning.
+ */
 function* walkFiles(root, skipDirs) {
   const stack = [root];
+  const visited = new Set();
   while (stack.length > 0) {
     const dir = stack.pop();
+    const real = realpathSync(dir);
+    if (visited.has(real)) continue;
+    visited.add(real);
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        if (!skipDirs.includes(entry.name)) stack.push(join(dir, entry.name));
-      } else if (statSync(join(dir, entry.name)).isFile()) {
-        yield join(dir, entry.name);
+      const path = join(dir, entry.name);
+      const stat = statSync(path);
+      if (stat.isDirectory()) {
+        if (!skipDirs.includes(entry.name)) stack.push(path);
+      } else if (stat.isFile()) {
+        yield path;
       }
     }
   }
