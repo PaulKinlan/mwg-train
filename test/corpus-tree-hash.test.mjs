@@ -5,7 +5,9 @@
  * symlink, never as a directory, so a walk that tested `entry.isDirectory()` alone stepped over a
  * linked subtree and hashed a tree without its files. These tests assert that a linked directory is
  * hashed like a real one, and that following the link cannot loop: a cyclic link, and a directory
- * reachable under two names, both terminate and hash deterministically.
+ * reachable under two names, both terminate and hash deterministically. The ignored-directory rule
+ * applies to where a link lands, not only to its name (review round 1), so an alias pointing at
+ * `node_modules` or `.git` stays out of the hash.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -86,4 +88,43 @@ test('a symlink named node_modules is still skipped', (t) => {
   symlinkSync(outside, join(root, 'node_modules'), 'dir');
 
   assert.equal(hashTree(root), hashTree(control), 'the node_modules skip is by name, before any stat follows the link');
+});
+
+test('a symlink under another name that points at node_modules is still skipped (review round 1)', (t) => {
+  // The skip above tests the entry's NAME. A link called `linked` aimed at node_modules passed that
+  // test, and the walk then hashed the ignored directory's files under `linked/`.
+  const outside = makeTree({ 'node_modules/pkg/index.js': 'installed()' });
+  const root = makeTree({ 'index.html': '<p>home</p>' });
+  const control = makeTree({ 'index.html': '<p>home</p>' });
+  const walked = makeTree({ 'index.html': '<p>home</p>', 'linked/pkg/index.js': 'installed()' });
+  cleanup(t, outside, root, control, walked);
+
+  symlinkSync(join(outside, 'node_modules'), join(root, 'linked'), 'dir');
+
+  assert.notEqual(hashTree(walked), hashTree(control), 'those bytes would change the hash if the walk reached them');
+  assert.equal(hashTree(root), hashTree(control), 'an alias into node_modules must not put its files in the hash');
+});
+
+test('a symlink that points deeper inside node_modules is still skipped (review round 1)', (t) => {
+  // An alias may aim at a package directory rather than at node_modules itself: the resolved path is
+  // checked component by component, so `linked` -> node_modules/pkg is skipped too.
+  const outside = makeTree({ 'node_modules/pkg/index.js': 'installed()' });
+  const root = makeTree({ 'index.html': '<p>home</p>' });
+  const control = makeTree({ 'index.html': '<p>home</p>' });
+  cleanup(t, outside, root, control);
+
+  symlinkSync(join(outside, 'node_modules', 'pkg'), join(root, 'linked'), 'dir');
+
+  assert.equal(hashTree(root), hashTree(control), 'a link to a directory inside node_modules is skipped like node_modules');
+});
+
+test('a symlink under another name that points at .git is still skipped (review round 1)', (t) => {
+  const outside = makeTree({ '.git/config': '[remote "origin"]' });
+  const root = makeTree({ 'index.html': '<p>home</p>' });
+  const control = makeTree({ 'index.html': '<p>home</p>' });
+  cleanup(t, outside, root, control);
+
+  symlinkSync(join(outside, '.git'), join(root, 'linked'), 'dir');
+
+  assert.equal(hashTree(root), hashTree(control), 'an alias into .git must not put its files in the hash');
 });

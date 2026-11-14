@@ -18,7 +18,7 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 export class ScanConfigError extends Error {}
 
@@ -99,8 +99,13 @@ function looksBinary(buffer) {
  * skipped a linked subtree and left its bytes unscanned - a place a leak could hide from a gate that
  * reports clean. `statSync` follows the link instead, and the set of real paths walked keeps a
  * cyclic link (a linked parent, two names for one directory) from looping or double-scanning.
+ *
+ * The `skip_dirs` rule applies to where a link LANDS, not only to its name (review round 1): a
+ * symlink called `linked` that points at `node_modules` or `.git` passes a name check, so the
+ * resolved path is checked against the same list and the walk never enters it.
  */
 function* walkFiles(root, skipDirs) {
+  const rootReal = realpathSync(root);
   const stack = [root];
   const visited = new Set();
   while (stack.length > 0) {
@@ -112,12 +117,22 @@ function* walkFiles(root, skipDirs) {
       const path = join(dir, entry.name);
       const stat = statSync(path);
       if (stat.isDirectory()) {
-        if (!skipDirs.includes(entry.name)) stack.push(path);
+        if (skipDirs.includes(entry.name) || landsInSkippedDir(rootReal, path, skipDirs)) continue;
+        stack.push(path);
       } else if (stat.isFile()) {
         yield path;
       }
     }
   }
+}
+
+/**
+ * True when `path` resolves into a directory named in `skipDirs`. The resolved path is compared
+ * relative to the resolved root, so the rule covers an alias (`linked` -> `node_modules`, or deeper
+ * inside it) without mistaking an ancestor of the tree for the tree's own content.
+ */
+function landsInSkippedDir(rootReal, path, skipDirs) {
+  return relative(rootReal, realpathSync(path)).split(sep).some((part) => skipDirs.includes(part));
 }
 
 /**
