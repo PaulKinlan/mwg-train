@@ -176,6 +176,51 @@ test('proxy headers and endpoints are detected', () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
+test('the viewer token env name is detected (mwg-train-u2hn)', () => {
+  // MWG_VIEWER_TOKEN is the viewer's own gate: a site that reads it has learned the mechanism this
+  // corpus rule forbids, not synthetic demo auth. It was absent from credential_env_names, so a
+  // generated project could carry the gate and the scan reported the tree clean.
+  const dir = makeTree({ 'server.mjs': 'const token = (process.env.MWG_VIEWER_TOKEN ?? "").trim();' });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config));
+  assert.equal(result.status, 'FAIL', JSON.stringify(result.findings));
+  assert.equal(result.findings[0].file, 'server.mjs');
+  assert.ok(
+    result.findings.some((finding) => finding.kind === 'credential-env-name'),
+    `expected a credential-env-name finding, got ${JSON.stringify(result.findings)}`,
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('the viewer session cookie name is detected (mwg-train-u2hn)', () => {
+  // `mwg_viewer` is the cookie the viewer's gate sets and reads. It is a viewer idiom rather than a
+  // proxy header, and it was denylisted nowhere, so a served site could name the cookie freely.
+  const dir = makeTree({ 'server.mjs': "response.writeHead(200, { 'set-cookie': 'mwg_viewer=' + token });" });
+  const config = loadScanConfig(CONFIG_PATH);
+  const result = scanTree(dir, buildMatchers(config));
+  assert.equal(result.status, 'FAIL', JSON.stringify(result.findings));
+  assert.equal(result.findings[0].file, 'server.mjs');
+  assert.ok(
+    result.findings.some((finding) => finding.kind === 'proxy-header-name'),
+    `expected a proxy-header-name finding, got ${JSON.stringify(result.findings)}`,
+  );
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('the --corpus gate fails a training project that embeds the viewer gate idioms (mwg-train-u2hn)', () => {
+  const { root, corpusRoot } = makeCorpus();
+  const entry = keepTrainingTree(corpusRoot, 'tr-99-raw', {
+    'server.mjs': "const token = process.env.MWG_VIEWER_TOKEN; setCookie(response, 'mwg_viewer', token);",
+  });
+  writeJson(join(corpusRoot, 'TRAINING_CORPUS.json'), { projects: [entry] });
+  const run = runCorpusScan(corpusRoot);
+  assert.equal(run.status, 1, `${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /FAIL tr-99-raw \(original\)/);
+  assert.match(run.stdout, /credential-env-name/);
+  assert.match(run.stdout, /proxy-header-name/);
+  rmSync(root, { recursive: true, force: true });
+});
+
 test('finding ids are opaque: they never contain the matched identifier (review finding)', () => {
   const dir = makeTree({ 'leak.md': 'contact paulkinlan for details' });
   const config = loadScanConfig(CONFIG_PATH);
